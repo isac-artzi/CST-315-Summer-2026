@@ -8,3 +8,6 @@
 
 # Internal PRD docs
 /PRD_*.md
+
+# Demo subfolders under code topics
+code/*/demos/
