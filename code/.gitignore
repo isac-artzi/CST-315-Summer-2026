@@ -1,0 +1,52 @@
+# Build artifacts
+*.o
+*.obj
+*.dSYM/
+*.exe
+*.out
+
+# Editor / OS junk
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Milestone & starter binaries (executable, no extension on Unix)
+**/hello
+**/lopeShell
+**/pager
+**/scheduler
+**/fs
+**/scan
+**/virus
+
+# Demo binaries — instructor only, never published, but never tracked either
+**/pipe_demo
+**/env_demo
+**/procfs_walker
+**/whoami_clone
+**/zombie_demo
+**/signal_demo
+**/pthread_basics
+**/prodcons_busywait
+**/prodcons_safe
+**/prodcons_monitor
+**/deadlock_demo
+**/dining_phil
+**/mmap_demo
+**/fault_timer
+**/bump_allocator
+**/belady_anomaly
+**/fcfs_sim
+**/sjf_sim
+**/mlfq_sim
+**/realtime_demo
+**/stat_demo
+**/fd_table_demo
+**/simple_raid0
+**/mmap_io
+**/aslr_demo
+**/stack_canary_demo
+**/seccomp_demo
+**/setuid_demo
+**/namespace_demo

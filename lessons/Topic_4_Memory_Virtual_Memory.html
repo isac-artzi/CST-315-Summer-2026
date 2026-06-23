@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Topic 4 — Memory Management and Virtual Memory · CST-315</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root{--bg:#f5f3ee;--ink:#1b2a4e;--ink-soft:#4a587a;--paper:#fbfaf6;--accent:#3b5fa8;--accent-soft:#d6dff0;--rule:rgba(27,42,78,0.18)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.55}
+  .page{max-width:1080px;margin:0 auto;padding:28px 32px 80px}
+  header.topic-header{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:28px}
+  .crumb{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .crumb .pill{background:var(--accent);color:var(--paper);padding:2px 8px;border-radius:2px;margin-right:8px;font-weight:600}
+  h1.topic-title{font-size:30px;margin:8px 0 6px;letter-spacing:-.01em;font-weight:700}
+  .topic-meta{font-size:13px;color:var(--ink-soft)} .topic-meta strong{color:var(--ink)}
+  .objectives{margin-top:14px;background:var(--paper);border:1px solid var(--ink);border-left:4px solid var(--accent);padding:14px 18px;border-radius:2px}
+  .objectives h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft)}
+  .objectives ol{margin:0;padding-left:22px;font-size:14px} .objectives li{margin-bottom:4px}
+  .factory-panel{margin-top:28px;background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:18px 20px}
+  .factory-panel h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .factory-panel .ctx-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+  .factory-panel p{margin:0 0 8px;font-size:14px} .factory-panel .meta{font-size:12px;color:var(--ink-soft)}
+  .mini-factory svg{width:100%;height:auto;max-height:220px;display:block}
+  .concept{margin-top:36px;padding-top:24px;border-top:1px solid var(--rule)}
+  .concept .num{display:inline-block;background:var(--ink);color:var(--paper);width:26px;height:26px;border-radius:50%;text-align:center;line-height:26px;font-size:13px;font-weight:700;margin-right:8px}
+  .concept h2{font-size:22px;margin:0 0 10px;font-weight:600} .concept p{font-size:15px;margin:0 0 12px}
+  .diagram{background:var(--paper);border:1px solid var(--rule);border-radius:2px;padding:14px;margin:14px 0}
+  .diagram .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:8px}
+  .factory-callout{background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 14px;margin:14px 0;font-size:14px}
+  .factory-callout strong{color:var(--accent);font-weight:700}
+  .sim{background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:16px;margin:16px 0}
+  .sim h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .sim .sim-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .sim button,.sim select,.sim input[type=text]{background:var(--bg);border:1px solid var(--ink);color:var(--ink);padding:5px 10px;font-size:12px;font-family:inherit;border-radius:2px;cursor:pointer}
+  .sim button:hover{background:var(--ink);color:var(--paper)}
+  .sim .hint{font-size:12px;color:var(--ink-soft)}
+  .pagesim svg{max-height:360px;width:100%}
+  .pagesim .frame{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}
+  .pagesim .frame.hit{fill:#cfe6df;stroke:#2e7d6b}
+  .pagesim .frame.fault{fill:#f0d4d4;stroke:#a83232}
+  .pagesim .pglabel{font-family:'Menlo','Consolas',monospace;font-size:13px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+  .pagesim .frameidx{font-size:10px;fill:var(--ink-soft);text-anchor:middle}
+  .pagesim .ref-cell{fill:var(--paper);stroke:var(--ink);stroke-width:1}
+  .pagesim .ref-cell.cur{fill:var(--accent);stroke:var(--accent)}
+  .pagesim .ref-cell.cur text{fill:var(--paper)}
+  .pagesim .ref-text{font-family:'Menlo','Consolas',monospace;font-size:11px;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+  .pagesim .stats{display:flex;gap:24px;margin-top:10px;font-size:13px}
+  .pagesim .stats .num{font-family:'Menlo','Consolas',monospace;font-size:20px;font-weight:700;color:var(--accent);display:block}
+  .pagesim .stats .label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+  .pagesim .stats div{padding:4px 12px;border:1px solid var(--rule);border-radius:3px}
+  .check,.bridge{margin-top:36px;padding:18px 20px;background:var(--paper);border:1px solid var(--ink);border-radius:2px}
+  .bridge{border-left:4px solid var(--accent)}
+  .check h2,.bridge h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .check ol{margin:0;padding-left:22px} .check li{margin-bottom:12px;font-size:14px}
+  .check details{margin-top:6px;font-size:13px;color:var(--ink-soft)}
+  .check summary{cursor:pointer;color:var(--accent);font-weight:600;list-style:none}
+  .check summary::-webkit-details-marker{display:none}
+  .check summary::before{content:"▸ "} .check details[open] summary::before{content:"▾ "}
+  .bridge .item{font-size:14px;margin-bottom:10px} .bridge .item strong{color:var(--ink)}
+  footer.topic-footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--ink);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px}
+  footer a{color:var(--accent);text-decoration:none;font-weight:600} footer a:hover{text-decoration:underline}
+  .mermaid{background:var(--paper);padding:12px;border-radius:2px}
+  .addr-table{font-family:'Menlo','Consolas',monospace;font-size:13px;background:var(--paper);border:1px solid var(--ink);border-collapse:collapse;width:100%;margin:10px 0}
+  .addr-table th,.addr-table td{border:1px solid var(--rule);padding:6px 10px;text-align:left}
+  .addr-table th{background:var(--accent-soft);color:var(--ink);font-weight:700}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="topic-header">
+  <div class="crumb"><span class="pill">Topic 4</span> CST-315 · Operating Systems Lecture &amp; Lab</div>
+  <h1 class="topic-title">Memory Management and Virtual Memory</h1>
+  <div class="topic-meta">Reading: <strong>Stallings, Chapters 7 &amp; 8</strong> · Lab questions 1–4 · Project 4 (Pager — Virtual Memory Manager) · Topic 4 Quiz</div>
+  <div class="objectives">
+    <h2>Topic objectives (from syllabus)</h2>
+    <ol>
+      <li>Manage memory resources to extend the memory available for processes to run.</li>
+      <li>Design, implement, and manage tables and frames.</li>
+      <li>Implement paging algorithms.</li>
+    </ol>
+  </div>
+</header>
+
+<section class="factory-panel">
+  <h2>Where this topic sits in the factory</h2>
+  <div class="ctx-grid">
+    <div>
+      <p>Topic 4 zooms into the <strong>Staging Racks</strong> and the <strong>Off-Site Warehouse</strong>. The racks are physical RAM — fast but limited. The warehouse is disk-backed virtual memory — slow but huge. The OS uses a shelf map (page table) so workers can refer to materials by a stable name without knowing where the pieces are actually stored.</p>
+      <p>When a worker reaches for a piece that isn't on the rack, a runner is dispatched to fetch it from the warehouse. That round trip is a page fault — expensive enough that you build the whole system to avoid it when possible, and graceful when it can't be avoided.</p>
+      <p class="meta">Open: <a href="../Factory_OS_Master.html?highlight=memory" style="color:var(--accent)">Racks</a> · <a href="../Factory_OS_Master.html?highlight=warehouse" style="color:var(--accent)">Warehouse</a></p>
+    </div>
+    <div class="mini-factory">
+      <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="308" height="20" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="34" width="80" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="92" y="34" width="140" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="238" y="34" width="76" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="116" width="80" height="50" rx="2" fill="#fbfaf6" stroke="#3b5fa8" stroke-width="2.5"/>
+        <text x="14" y="130" font-size="9" font-weight="700" fill="#3b5fa8">RACKS</text>
+        <rect x="14" y="138" width="14" height="10" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <rect x="30" y="138" width="14" height="10" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <rect x="46" y="138" width="14" height="10" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <rect x="62" y="138" width="14" height="10" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <rect x="14" y="152" width="14" height="10" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <rect x="30" y="152" width="14" height="10" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <rect x="92" y="116" width="140" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="238" y="116" width="76" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="172" width="308" height="22" rx="2" fill="#fbfaf6" stroke="#3b5fa8" stroke-width="2.5"/>
+        <text x="14" y="187" font-size="9" font-weight="700" fill="#3b5fa8">WAREHOUSE (virtual memory)</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">1</span>Why virtual memory exists</h2>
+  <p>Programs are written as if they have a clean, contiguous block of memory from address 0 upward. The reality is messier: many programs share the machine, RAM is finite, and forcing programs to know about each other's memory layout would be a nightmare. <strong>Virtual memory</strong> solves this by giving each process its own <em>virtual address space</em>, and translating every memory reference into a physical address at access time.</p>
+  <p>The translation buys three things. First, <strong>isolation</strong>: process A cannot read process B's memory because their virtual addresses map to different physical locations. Second, <strong>flexibility</strong>: physical memory does not need to be contiguous; the OS can place a process's pages wherever there's room. Third, and most powerfully, <strong>extension</strong>: the virtual address space can be larger than physical memory, with the overflow living on disk and brought into RAM only when needed.</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Each worker is told "your materials are at shelves 0 through 1000." The shelf map (page table) translates that to real warehouse locations. Workers don't have to share a numbering scheme; they don't have to know whether their shelf 5 is the same as anyone else's; and shelves beyond rack capacity live in the off-site warehouse.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">2</span>Paging — fixed-size chunks of memory</h2>
+  <p><strong>Paging</strong> divides the virtual address space into fixed-size <em>pages</em> (typically 4 KB) and physical memory into <em>frames</em> of the same size. Each process has a <strong>page table</strong> that maps each of its virtual pages to a physical frame, or marks the page as "not present" (lives on disk).</p>
+  <p>A virtual address breaks into two parts: the high bits select a page number; the low bits are an offset within that page. The page table lookup converts the page number to a frame number; the offset passes through unchanged. The result is a physical address.</p>
+  <div class="diagram">
+    <div class="label">12-bit virtual address with 4 KB pages? No — let's go small: 12-bit address, 256-byte pages</div>
+    <table class="addr-table">
+      <tr><th>Virtual address (12 bits)</th><td>0xA37 = 1010 0011 0111</td></tr>
+      <tr><th>Page size</th><td>256 bytes = 2<sup>8</sup>, so offset = 8 bits, page number = 4 bits</td></tr>
+      <tr><th>Page number</th><td>0xA = 1010</td></tr>
+      <tr><th>Offset</th><td>0x37 = 0011 0111</td></tr>
+      <tr><th>Page table lookup</th><td>page 0xA → frame 0x3</td></tr>
+      <tr><th>Physical address</th><td>frame 0x3 + offset 0x37 = 0x337</td></tr>
+    </table>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> A page is a fixed-size shelf. A frame is the slot on the rack that holds a shelf. The page table is the shelf map: "shelf #10 is currently on rack slot #3." The offset is which item on that shelf.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">3</span>Page tables and the TLB</h2>
+  <p>For every memory reference, the CPU must consult the page table. That's an extra memory access per access — devastating for performance. Hardware mitigates this with a <strong>Translation Lookaside Buffer</strong> (TLB): a small, fast cache of recent translations. On TLB hit, no extra memory access; on TLB miss, the page table is walked.</p>
+  <p>Linux uses a multi-level page table (three or four levels depending on architecture) so that the table itself is paged — you don't need to allocate a flat array large enough for the entire 64-bit virtual address space. The downside is more levels of lookup on a miss; the upside is the table footprint scales with usage.</p>
+  <div class="diagram">
+    <div class="label">Two-level page table walk</div>
+    <pre class="mermaid">
+flowchart LR
+  VA[Virtual address] --> D[Directory index]
+  VA --> P[Page index]
+  VA --> O[Offset]
+  D --> PD[Page directory] --> PT[Page table]
+  P --> PT --> F[Frame number]
+  F --> PA[Physical address]
+  O --> PA
+    </pre>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> The TLB is the worker's memory — "I just used shelf 10, it's on rack 3, I'll remember that for a few minutes." The multi-level page table is a binder of binders: the master index points to sub-indexes that each cover a region of the warehouse.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">4</span>Demand paging and page replacement</h2>
+  <p><strong>Demand paging</strong>: a page is brought into RAM only on first access. When a process touches a page that's not present, the CPU raises a <strong>page fault</strong>; the OS pauses the process, finds a free frame (or evicts one), reads the page from disk, updates the page table, and resumes.</p>
+  <p>If memory is full, the OS must choose a victim. Replacement algorithms: <strong>FIFO</strong> (oldest-loaded out — simple but can evict heavily-used pages), <strong>LRU</strong> (least-recently-used — best theoretical performance but expensive to track exactly), <strong>Clock</strong> (a practical LRU approximation using a reference bit). Modern Linux uses a variant of clock with multiple lists.</p>
+
+  <div class="sim pagesim">
+    <h3>Live: PagingSim — watch a reference string fill 4 frames</h3>
+    <div class="sim-controls">
+      <label class="hint">Algorithm: <select id="algo"><option value="FIFO">FIFO</option><option value="LRU" selected>LRU</option></select></label>
+      <label class="hint">Reference string: <input type="text" id="refstr" value="1 2 3 4 1 2 5 1 2 3 4 5"></label>
+      <button id="psStep">Step</button>
+      <button id="psAuto">Auto-play</button>
+      <button id="psReset">Reset</button>
+    </div>
+    <svg id="psSvg" viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="stats">
+      <div><span class="label">refs processed</span><span class="num" id="psCount">0</span></div>
+      <div><span class="label">hits</span><span class="num" id="psHits">0</span></div>
+      <div><span class="label">faults</span><span class="num" id="psFaults">0</span></div>
+      <div><span class="label">fault rate</span><span class="num" id="psRate">0%</span></div>
+    </div>
+  </div>
+
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Demand paging is "only fetch from the warehouse when a worker actually asks." When the rack is full and a runner brings in a new shelf, something must come off. FIFO is "kick out whichever shelf has been on the rack the longest." LRU is "kick out the shelf nobody has touched in a while." Clock is "do a quick walk past every shelf looking for ones with no recent use stamp."
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">5</span>Linux's page management — a modern snapshot</h2>
+  <p>Linux maintains active and inactive lists of pages, scans them periodically, ages reference bits via the clock algorithm, and reclaims inactive pages first under memory pressure. Memory-mapped files (<code>mmap</code>) and the page cache mean that file I/O and virtual memory share the same machinery — when you read a file, its bytes show up in pages of memory that can then be evicted or reused like any other.</p>
+  <p>Modern features worth knowing about as you build Project 4: <em>copy-on-write</em> (after <code>fork()</code>, parent and child share pages until one writes — then a copy is made), <em>huge pages</em> (2 MB or 1 GB pages reduce TLB pressure for large workloads), and <em>transparent page sharing</em> in virtualized environments (identical pages across VMs are deduplicated).</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Linux keeps two queues of shelves: "in active use" and "could be evicted soon." A janitor walks the inactive queue and marks shelves for return to the warehouse. Copy-on-write is the receptionist saying "the new clipboard shares everything with the old one — but the moment either side scribbles, photocopy the shelf and split them."
+  </div>
+</section>
+
+<section class="check">
+  <h2>Check for understanding</h2>
+  <ol>
+    <li>
+      A 32-bit virtual address space with 4 KB pages produces page tables of what size, if implemented as a single flat array?
+      <details><summary>Show a sample answer</summary>
+        4 KB = 2<sup>12</sup> bytes, so the offset is 12 bits and the page number is 20 bits. That's 2<sup>20</sup> = ~1 million entries per process. At 4 bytes per entry, the page table itself is 4 MB. Per process. Hence multi-level page tables.
+      </details>
+    </li>
+    <li>
+      A process accesses 1000 pages. RAM holds 100 frames. The access pattern visits each page once in order. Which algorithm performs best — FIFO, LRU, or optimal — and by how much?
+      <details><summary>Show a sample answer</summary>
+        All perform identically: every reference is a fault (the page wasn't there before). 1000 faults regardless. The choice of algorithm matters when there is locality (repeated access to a working set); a one-shot scan has no locality to exploit.
+      </details>
+    </li>
+    <li>
+      What is "Belady's anomaly" and why is it counterintuitive?
+      <details><summary>Show a sample answer</summary>
+        For FIFO replacement, adding more frames can sometimes <em>increase</em> the number of page faults. It's counterintuitive because more memory ought to help. The anomaly does not occur for LRU or optimal.
+      </details>
+    </li>
+    <li>
+      Why does your Project 4 spec say "all pages should be demand paged"? What would be the alternative and its trade-offs?
+      <details><summary>Show a sample answer</summary>
+        Alternative: pre-paging — load all pages of a segment as soon as the executable starts. Pro: no faults during execution. Con: huge startup latency, wasted memory if many pages are never touched. Demand paging defers work until it's actually needed, at the cost of fault latency on first touch.
+      </details>
+    </li>
+  </ol>
+</section>
+
+<section class="bridge">
+  <h2>Bridge to graded work</h2>
+  <div class="item"><strong>Project 4 — Pager (Virtual Memory Manager).</strong> Design and implement the page tables, the frame tables, the replacement algorithm, demand paging logic, and fault handling. Activity 2 of this topic produces a working LRU replacement function in C that you can drop into your VMM.</div>
+  <div class="item"><strong>Topic 4 Quiz.</strong> Stallings Ch. 7–8: address translation, page tables, demand paging, replacement algorithms, Linux's three-level page table structure.</div>
+  <div class="item"><strong>Lab Questions 1–4.</strong> Buffer overflow consequences, basic memory management tools, when a page is brought into main memory, Linux's three-level page table. All directly covered by the concept sections above.</div>
+  <div class="item"><strong>Assignment 3 spillover.</strong> Recall from Topic 3 that deadlock can occur on memory resources too. Project 4 introduces the I/O parallelism requirement — a fault that requires I/O must not block unrelated processes.</div>
+</section>
+
+<footer class="topic-footer">
+  <div><a href="../activities/Topic_4_Activities.md">In-class activities for this topic →</a></div>
+  <div><a href="../Factory_OS_Master.html">Open the full factory visualization →</a></div>
+</footer>
+
+</div>
+
+<script>
+  mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{background:'#fbfaf6',primaryColor:'#fbfaf6',primaryTextColor:'#1b2a4e',primaryBorderColor:'#1b2a4e',lineColor:'#4a587a',fontFamily:'Inter, -apple-system, sans-serif',fontSize:'13px'},flowchart:{curve:'basis'}});
+
+  // ----- PagingSim -----
+  (function(){
+    const svg=d3.select('#psSvg');
+    const NUM_FRAMES=4;
+    let refs=[]; let frames=Array(NUM_FRAMES).fill(null); let lastUsed=Array(NUM_FRAMES).fill(-1);
+    let loadOrder=Array(NUM_FRAMES).fill(-1);
+    let idx=0; let hits=0; let faults=0; let time=0;
+    let timer=null;
+
+    function parseRefs(){
+      refs = document.getElementById('refstr').value.trim().split(/\s+/).map(Number).filter(n=>!isNaN(n));
+    }
+
+    function reset(){
+      parseRefs();
+      frames=Array(NUM_FRAMES).fill(null);
+      lastUsed=Array(NUM_FRAMES).fill(-1);
+      loadOrder=Array(NUM_FRAMES).fill(-1);
+      idx=0; hits=0; faults=0; time=0;
+      if(timer){clearInterval(timer);timer=null;}
+      render(null);
+      updateStats();
+    }
+    function updateStats(){
+      document.getElementById('psCount').textContent=idx;
+      document.getElementById('psHits').textContent=hits;
+      document.getElementById('psFaults').textContent=faults;
+      const total=hits+faults;
+      document.getElementById('psRate').textContent=total>0?Math.round(faults/total*100)+'%':'0%';
+    }
+    function step(){
+      if(idx >= refs.length) return;
+      const algo=document.getElementById('algo').value;
+      const p=refs[idx];
+      time++;
+      let hitFrame = frames.indexOf(p);
+      let evict=-1;
+      if(hitFrame >= 0){
+        hits++;
+        lastUsed[hitFrame]=time;
+        render({type:'hit', frame:hitFrame, page:p});
+      } else {
+        faults++;
+        // find empty frame
+        let free=frames.indexOf(null);
+        if(free >= 0){
+          frames[free]=p; lastUsed[free]=time; loadOrder[free]=time;
+          evict=free;
+        } else {
+          // pick victim
+          let victim=0;
+          if(algo==='FIFO'){
+            for(let i=1;i<NUM_FRAMES;i++) if(loadOrder[i]<loadOrder[victim]) victim=i;
+          } else { // LRU
+            for(let i=1;i<NUM_FRAMES;i++) if(lastUsed[i]<lastUsed[victim]) victim=i;
+          }
+          frames[victim]=p; lastUsed[victim]=time; loadOrder[victim]=time;
+          evict=victim;
+        }
+        render({type:'fault', frame:evict, page:p});
+      }
+      idx++; updateStats();
+      if(idx >= refs.length && timer){clearInterval(timer);timer=null;}
+    }
+
+    function render(action){
+      svg.selectAll('*').remove();
+      // header: reference string
+      svg.append('text').attr('x',16).attr('y',24).attr('font-size',12).attr('font-weight',600).attr('fill','#1b2a4e').text('Reference string:');
+      const cellW=36, cellH=28; const startX=140;
+      refs.forEach((r,i)=>{
+        const cls='ref-cell'+(i===idx-1?' cur':'');
+        svg.append('rect').attr('class',cls).attr('x',startX+i*cellW).attr('y',8).attr('width',cellW-4).attr('height',cellH).attr('rx',2);
+        svg.append('text').attr('class','ref-text').attr('x',startX+i*cellW+cellW/2-2).attr('y',8+cellH/2)
+          .attr('fill', i===idx-1?'#fbfaf6':'#1b2a4e').text(r);
+      });
+      // frames as boxes
+      const fy=80;
+      svg.append('text').attr('x',16).attr('y',fy+20).attr('font-size',12).attr('font-weight',600).attr('fill','#1b2a4e').text('Physical frames (RAM):');
+      frames.forEach((p,i)=>{
+        const x=140+i*80;
+        let cls='frame';
+        if(action && action.frame===i){ cls += action.type==='hit'?' hit':' fault'; }
+        svg.append('rect').attr('class',cls).attr('x',x).attr('y',fy).attr('width',64).attr('height',64).attr('rx',3);
+        svg.append('text').attr('class','frameidx').attr('x',x+32).attr('y',fy+10).text('frame '+i);
+        svg.append('text').attr('class','pglabel').attr('x',x+32).attr('y',fy+38).text(p===null?'—':p);
+        svg.append('text').attr('font-size',9).attr('fill','#4a587a').attr('x',x+32).attr('y',fy+58).attr('text-anchor','middle').text(p===null?'empty':'page '+p);
+      });
+      // action label
+      const ay=200;
+      if(action){
+        const msg = action.type==='hit'
+          ? `HIT: page ${action.page} already in frame ${action.frame}`
+          : `FAULT: page ${action.page} loaded into frame ${action.frame}`;
+        svg.append('text').attr('x',16).attr('y',ay).attr('font-size',13).attr('font-weight',700)
+          .attr('fill', action.type==='hit'?'#2e7d6b':'#a83232').text(msg);
+      }
+      // warehouse + racks legend
+      svg.append('text').attr('x',16).attr('y',240).attr('font-size',11).attr('fill','#4a587a').attr('font-style','italic').text('Tip: change algorithm, change the reference string, or step manually.');
+    }
+
+    document.getElementById('psStep').addEventListener('click',step);
+    document.getElementById('psAuto').addEventListener('click',()=>{
+      if(timer){clearInterval(timer);timer=null;return;}
+      timer=setInterval(step,800);
+    });
+    document.getElementById('psReset').addEventListener('click',reset);
+    document.getElementById('algo').addEventListener('change',reset);
+    document.getElementById('refstr').addEventListener('change',reset);
+    reset();
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Topic 3 — Mutual Exclusion and Concurrency · CST-315</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root{--bg:#f5f3ee;--ink:#1b2a4e;--ink-soft:#4a587a;--paper:#fbfaf6;--accent:#a83232;--accent-soft:#f0d4d4;--rule:rgba(27,42,78,0.18)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.55}
+  .page{max-width:1080px;margin:0 auto;padding:28px 32px 80px}
+  header.topic-header{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:28px}
+  .crumb{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .crumb .pill{background:var(--accent);color:var(--paper);padding:2px 8px;border-radius:2px;margin-right:8px;font-weight:600}
+  h1.topic-title{font-size:30px;margin:8px 0 6px;letter-spacing:-.01em;font-weight:700}
+  .topic-meta{font-size:13px;color:var(--ink-soft)} .topic-meta strong{color:var(--ink)}
+  .objectives{margin-top:14px;background:var(--paper);border:1px solid var(--ink);border-left:4px solid var(--accent);padding:14px 18px;border-radius:2px}
+  .objectives h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft)}
+  .objectives ol{margin:0;padding-left:22px;font-size:14px} .objectives li{margin-bottom:4px}
+  .factory-panel{margin-top:28px;background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:18px 20px}
+  .factory-panel h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .factory-panel .ctx-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+  .factory-panel p{margin:0 0 8px;font-size:14px} .factory-panel .meta{font-size:12px;color:var(--ink-soft)}
+  .mini-factory svg{width:100%;height:auto;max-height:220px;display:block}
+  .concept{margin-top:36px;padding-top:24px;border-top:1px solid var(--rule)}
+  .concept .num{display:inline-block;background:var(--ink);color:var(--paper);width:26px;height:26px;border-radius:50%;text-align:center;line-height:26px;font-size:13px;font-weight:700;margin-right:8px}
+  .concept h2{font-size:22px;margin:0 0 10px;font-weight:600}
+  .concept p{font-size:15px;margin:0 0 12px}
+  .diagram{background:var(--paper);border:1px solid var(--rule);border-radius:2px;padding:14px;margin:14px 0}
+  .diagram .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:8px}
+  .factory-callout{background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 14px;margin:14px 0;font-size:14px}
+  .factory-callout strong{color:var(--accent);font-weight:700}
+  .sim{background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:16px;margin:16px 0}
+  .sim h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .sim .sim-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .sim button,.sim select,.sim input[type=text]{background:var(--bg);border:1px solid var(--ink);color:var(--ink);padding:5px 10px;font-size:12px;font-family:inherit;border-radius:2px;cursor:pointer}
+  .sim button:hover{background:var(--ink);color:var(--paper)}
+  .sim .hint{font-size:12px;color:var(--ink-soft)}
+  .sim .pill-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink)}
+  .sim svg{width:100%;height:auto;display:block}
+  .concsim svg{max-height:240px}
+  .concsim .thread-box{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}
+  .concsim .thread-box.t1{fill:#e9efdb}
+  .concsim .thread-box.t2{fill:#dbe0ef}
+  .concsim .buf{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+  .concsim .buf-val{font-family:'Menlo','Consolas',monospace;font-size:16px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+  .concsim .light{stroke:var(--ink);stroke-width:1.5}
+  .concsim .light.go{fill:#4a8a3d} .concsim .light.stop{fill:#a83232}
+  .concsim .pkt{fill:var(--accent);stroke:var(--ink);stroke-width:1}
+  .concsim .log{font-family:'Menlo','Consolas',monospace;font-size:12px;background:var(--ink);color:#f0d4d4;padding:10px;border-radius:3px;max-height:120px;overflow-y:auto;margin-top:8px}
+  .deadsim svg{max-height:300px}
+  .deadsim .proc{fill:var(--paper);stroke:var(--ink);stroke-width:1.8}
+  .deadsim .res{fill:var(--paper);stroke:var(--ink);stroke-width:1.8}
+  .deadsim .lbl{font-family:'Menlo','Consolas',monospace;font-size:12px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+  .deadsim .edge{stroke:var(--ink-soft);stroke-width:1.5;fill:none}
+  .deadsim .edge.cycle{stroke:var(--accent);stroke-width:2.5}
+  .deadsim .verdict{font-size:14px;font-weight:600;margin-top:6px}
+  .deadsim .verdict.bad{color:var(--accent)} .deadsim .verdict.good{color:#4a8a3d}
+  .check{margin-top:36px;padding:18px 20px;background:var(--paper);border:1px solid var(--ink);border-radius:2px}
+  .check h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .check ol{margin:0;padding-left:22px} .check li{margin-bottom:12px;font-size:14px}
+  .check details{margin-top:6px;font-size:13px;color:var(--ink-soft)}
+  .check summary{cursor:pointer;color:var(--accent);font-weight:600;list-style:none}
+  .check summary::-webkit-details-marker{display:none}
+  .check summary::before{content:"▸ "} .check details[open] summary::before{content:"▾ "}
+  .bridge{margin-top:28px;padding:18px 20px;background:var(--paper);border:1px solid var(--ink);border-left:4px solid var(--accent);border-radius:2px}
+  .bridge h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .bridge .item{font-size:14px;margin-bottom:10px} .bridge .item strong{color:var(--ink)}
+  footer.topic-footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--ink);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px}
+  footer a{color:var(--accent);text-decoration:none;font-weight:600} footer a:hover{text-decoration:underline}
+  .mermaid{background:var(--paper);padding:12px;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="topic-header">
+  <div class="crumb"><span class="pill">Topic 3</span> CST-315 · Operating Systems Lecture &amp; Lab</div>
+  <h1 class="topic-title">Mutual Exclusion and Concurrency</h1>
+  <div class="topic-meta">Reading: <strong>Stallings, Chapters 5 &amp; 6</strong> · Lab questions 1–4 · Project 3 (Improved CLI) · Assignment 2 (Monitors &amp; Semaphores) · Assignment 3 (Deadlock Avoidance) · Topic 3 Quiz</div>
+  <div class="objectives">
+    <h2>Topic objectives (from syllabus)</h2>
+    <ol>
+      <li>Differentiate between monitors and semaphores.</li>
+      <li>Create a C program that implements a specified scenario.</li>
+      <li>Assess the efficiency of a timer to solve deadlock situations.</li>
+      <li>Design a shell that handles multiple commands simultaneously.</li>
+    </ol>
+  </div>
+</header>
+
+<section class="factory-panel">
+  <h2>Where this topic sits in the factory</h2>
+  <div class="ctx-grid">
+    <div>
+      <p>Topic 3 is about <strong>shared tool stations</strong>. When two workers reach for the same tool at the same time, something has to coordinate them. A signal light at the tool station is a <em>semaphore</em>. A locked tool room with a single key is a <em>monitor</em>. A pair of workers each holding a tool the other needs is a <em>deadlock</em>.</p>
+      <p>This topic is also where your shell graduates: Project 3 extends Project 2 to handle multiple concurrent commands cleanly, which requires the same coordination thinking applied to multiple child processes.</p>
+      <p class="meta">Open: <a href="../Factory_OS_Master.html?highlight=cpu" style="color:var(--accent)">The floor with the shared stations</a></p>
+    </div>
+    <div class="mini-factory">
+      <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="308" height="20" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <text x="14" y="20" font-size="9" font-weight="600" fill="#1b2a4e" opacity="0.5">MANAGER'S OFFICE</text>
+        <rect x="92" y="34" width="140" height="76" rx="2" fill="#fbfaf6" stroke="#a83232" stroke-width="2.5"/>
+        <text x="100" y="48" font-size="9" font-weight="700" fill="#a83232">FLOOR — SHARED TOOLS</text>
+        <circle cx="120" cy="86" r="9" fill="#e9efdb" stroke="#1b2a4e"/>
+        <text x="120" y="89" font-size="9" text-anchor="middle">T1</text>
+        <circle cx="200" cy="86" r="9" fill="#dbe0ef" stroke="#1b2a4e"/>
+        <text x="200" y="89" font-size="9" text-anchor="middle">T2</text>
+        <rect x="148" y="76" width="24" height="20" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <circle cx="160" cy="86" r="4" fill="#4a8a3d"/>
+        <rect x="6" y="34" width="80" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="238" y="34" width="76" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="116" width="80" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="92" y="116" width="140" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="238" y="116" width="76" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="172" width="308" height="22" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">1</span>Critical sections and the race</h2>
+  <p>A <strong>critical section</strong> is a stretch of code that touches shared state in a way that must not interleave with other threads doing the same. The classic example: two threads each running <code>balance = balance + 1</code> on a shared variable. The operation is three machine instructions (load, add, store). If both threads load the same value before either stores, one increment is lost. That is a <strong>race condition</strong>.</p>
+  <p>Three requirements for any correct mutual exclusion solution: <em>mutual exclusion itself</em> (at most one thread in the critical section), <em>progress</em> (some thread can eventually enter when none is inside), and <em>bounded waiting</em> (no thread waits forever while others repeatedly enter).</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Two workers approach the same tool. If both grab it, the tool breaks (or the work order is wrong). Some coordination — a sign, a light, a key — has to prevent simultaneous access. That coordination must be fair: neither worker should be starved.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">2</span>Semaphores — counters with a queue</h2>
+  <p>A <strong>semaphore</strong> is an integer with two atomic operations: <code>wait()</code> (also called <code>P</code> or <code>down</code>) decrements it, blocking if the value would go negative; <code>signal()</code> (also called <code>V</code> or <code>up</code>) increments it and wakes one waiter if any. A binary semaphore (initial value 1) acts as a lock. A counting semaphore (initial value N) controls access to N copies of a resource.</p>
+  <p>POSIX gives you <code>sem_init</code>, <code>sem_wait</code>, <code>sem_post</code>, <code>sem_destroy</code> in <code>&lt;semaphore.h&gt;</code>. Linux also provides System V semaphores (<code>semget</code>, <code>semop</code>) and lower-level futexes used by pthread mutexes underneath.</p>
+
+  <div class="sim concsim">
+    <h3>Live: ConcurrencySim — producer and consumer, with the signal light on or off</h3>
+    <div class="sim-controls">
+      <label class="pill-toggle"><input type="checkbox" id="semOn"> use semaphore (signal light ON)</label>
+      <button id="cStart">Start</button>
+      <button id="cReset">Reset</button>
+      <span class="hint">Watch the buffer when the light is off — values get clobbered.</span>
+    </div>
+    <svg id="concSvg" viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="log" id="concLog"></div>
+  </div>
+
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> A semaphore is a signal light at the shared tool station. Green: a worker may enter. Red: wait. The counter is how many slots are still open. <code>wait()</code> takes a slot; <code>signal()</code> returns one. The queue of waiting workers is the line behind the light.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">3</span>Monitors — the locked tool room</h2>
+  <p>A <strong>monitor</strong> is a higher-level construct: a module that bundles shared state and the procedures that operate on it, with an implicit lock that ensures only one thread is inside the monitor at a time. Condition variables inside the monitor let a thread <em>wait</em> for a state predicate to hold, releasing the lock while waiting, and <em>signal</em> another thread when the predicate becomes true.</p>
+  <p>Monitors are easier to reason about because the synchronization is structural — you cannot accidentally enter the critical section without going through the lock. Semaphores require disciplined programmer use (every <code>wait</code> needs a matching <code>signal</code>) and are easy to misuse. Trade-off: monitors are less flexible.</p>
+  <div class="diagram">
+    <div class="label">Semaphore vs monitor — the same producer/consumer</div>
+    <pre class="mermaid">
+flowchart LR
+  subgraph SEM[Semaphore version]
+    P1[Producer: sem_wait empty; insert; sem_post full]
+    C1[Consumer: sem_wait full; remove; sem_post empty]
+  end
+  subgraph MON[Monitor version]
+    M[Monitor BoundedBuffer<br/>insert / remove inside lock<br/>not_full / not_empty cond vars]
+    P2[Producer: monitor.insert]
+    C2[Consumer: monitor.remove]
+    P2 --> M
+    C2 --> M
+  end
+    </pre>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> The monitor is a locked tool room. You knock, the room lets you in, you do your work, the room locks behind you on the way out. If the tool you need is not ready, you sit on the bench inside the room (condition wait) until someone signals you.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">4</span>Deadlock — the four conditions</h2>
+  <p>Deadlock occurs when a set of processes are all waiting for resources held by others in the set. Coffman's four necessary conditions: <em>mutual exclusion</em> (a resource is held by at most one process), <em>hold and wait</em> (a process holding one resource may request more), <em>no preemption</em> (resources are released only voluntarily), and <em>circular wait</em> (a cycle of "X holds resource Y waits for" exists).</p>
+  <p>Strategies: prevention (negate one of the four conditions by design), avoidance (use information about future requests, e.g. Banker's algorithm), detection and recovery (let it happen, find the cycle, kill or roll back a process), or the syllabus's Assignment 3 approach — a <em>timer</em> that breaks a process out of its wait after a set interval and lets the system try again.</p>
+
+  <div class="sim deadsim">
+    <h3>Live: DeadlockSim — set up resource holds and watch for a cycle</h3>
+    <div class="sim-controls">
+      <button id="dPreset1">Preset: deadlock</button>
+      <button id="dPreset2">Preset: safe</button>
+      <button id="dRandom">Random</button>
+      <button id="dClear">Clear all edges</button>
+    </div>
+    <svg id="deadSvg" viewBox="0 0 720 260" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="verdict" id="dVerdict"></div>
+  </div>
+
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Worker A holds the drill and needs the press. Worker B holds the press and needs the drill. Neither will let go. The line stops. A timer is the floor supervisor walking over after N minutes and saying "drop everything, start over."
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">5</span>Classical problems you should be able to draw</h2>
+  <p>Three patterns appear repeatedly. <strong>Producer/Consumer</strong>: one or more producers add to a bounded buffer, one or more consumers remove from it; synchronization tracks empty slots and full slots. <strong>Readers/Writers</strong>: many readers may share a resource, but a writer needs exclusive access; the design choice is whether to favor readers (potential writer starvation) or writers (potential reader starvation). <strong>Dining Philosophers</strong>: five philosophers, five forks, each needs two adjacent forks; the naive solution deadlocks symmetrically.</p>
+  <div class="diagram">
+    <div class="label">Bounded buffer (producer/consumer) — Stallings Ch. 5</div>
+    <pre class="mermaid">
+flowchart LR
+  P[Producer] -->|sem_wait empty<br/>insert<br/>sem_post full| B[(Bounded buffer)]
+  B -->|sem_wait full<br/>remove<br/>sem_post empty| C[Consumer]
+    </pre>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Producer/consumer is a stocker filling a shelf and a picker emptying it — the shelf is the bounded buffer. Readers/writers is many people reading a binder vs one person editing it. Dining philosophers is five workers around a circular bench, each needing the two wrenches next to them.
+  </div>
+</section>
+
+<section class="check">
+  <h2>Check for understanding</h2>
+  <ol>
+    <li>
+      Why is a binary semaphore not exactly the same as a mutex, even though both can act as a lock?
+      <details><summary>Show a sample answer</summary>
+        A mutex has ownership: only the thread that locked it can unlock it. A binary semaphore has no owner — any thread can call <code>sem_post</code>. That makes semaphores more flexible for signaling between threads, but also easier to misuse for plain mutual exclusion.
+      </details>
+    </li>
+    <li>
+      Name Coffman's four necessary conditions for deadlock and pick one that the timer-based strategy in Assignment 3 attacks.
+      <details><summary>Show a sample answer</summary>
+        Mutual exclusion, hold-and-wait, no preemption, circular wait. The timer attacks <em>no preemption</em>: after the timeout the OS forcibly releases the held resources, letting the system try again.
+      </details>
+    </li>
+    <li>
+      In Assignment 1 (Producer/Consumer), the spec forbids semaphores and asks you to rely on <code>sleep</code> and <code>wakeup</code>. What is the failure mode if you sleep when the buffer is full and the consumer wakes you up just as you were checking?
+      <details><summary>Show a sample answer</summary>
+        Lost wakeup: the producer reads "buffer full" then is preempted before going to sleep. The consumer empties the buffer and signals wakeup, but the producer is not yet asleep. The producer then sleeps forever waiting for a wakeup that already happened. This is exactly why semaphores exist.
+      </details>
+    </li>
+    <li>
+      When would you reach for a monitor instead of a semaphore?
+      <details><summary>Show a sample answer</summary>
+        When the synchronization is tied to a coherent piece of state that always gets accessed through the same set of operations — a bounded queue, a connection pool, a thread-safe cache. Bundling state and locking into one module reduces the chance of accidental access without locking.
+      </details>
+    </li>
+  </ol>
+</section>
+
+<section class="bridge">
+  <h2>Bridge to graded work</h2>
+  <div class="item"><strong>Project 3 — Improved Command Line Interpreter.</strong> Take your Project 2 shell and add concurrency handling for the multi-command case, plus at least two new features. The data structures for tracking outstanding children are the same coordination problem as the producer/consumer pattern.</div>
+  <div class="item"><strong>Assignment 2 — Monitors and Semaphores.</strong> Implement one scenario two ways: once with semaphores, once with monitors. Justify your recommendation. The classical-problems section above gives you ready-made scenarios.</div>
+  <div class="item"><strong>Assignment 3 — Deadlock Avoidance.</strong> Several processes compete for the same resource; a timer breaks waiters out. Compile activity logs, assess scalability, propose alternatives if the timer fails. The four Coffman conditions are your analytical framework.</div>
+  <div class="item"><strong>Topic 3 Quiz.</strong> Stallings Ch. 5–6 on concurrency, mutual exclusion, semaphores, monitors, and the classical problems.</div>
+</section>
+
+<footer class="topic-footer">
+  <div><a href="../activities/Topic_3_Activities.md">In-class activities for this topic →</a></div>
+  <div><a href="../Factory_OS_Master.html">Open the full factory visualization →</a></div>
+</footer>
+
+</div>
+
+<script>
+  mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{background:'#fbfaf6',primaryColor:'#fbfaf6',primaryTextColor:'#1b2a4e',primaryBorderColor:'#1b2a4e',lineColor:'#4a587a',fontFamily:'Inter, -apple-system, sans-serif',fontSize:'13px'},flowchart:{curve:'basis'}});
+
+  // ----- ConcurrencySim -----
+  (function(){
+    const svg=d3.select('#concSvg');
+    const log=document.getElementById('concLog');
+    const semChk=document.getElementById('semOn');
+    let buffer=0; let running=false; let timer=null; let tick=0;
+
+    function setupStatic(){
+      svg.selectAll('*').remove();
+      // T1 box (producer)
+      svg.append('rect').attr('class','thread-box t1').attr('x',40).attr('y',60).attr('width',160).attr('height',60).attr('rx',3);
+      svg.append('text').attr('x',120).attr('y',82).attr('text-anchor','middle').attr('font-size',12).attr('font-weight',600).text('Producer (T1)');
+      svg.append('text').attr('x',120).attr('y',104).attr('text-anchor','middle').attr('font-size',11).attr('fill','#4a587a').text('balance = balance + 1');
+      // T2 box (consumer)
+      svg.append('rect').attr('class','thread-box t2').attr('x',520).attr('y',60).attr('width',160).attr('height',60).attr('rx',3);
+      svg.append('text').attr('x',600).attr('y',82).attr('text-anchor','middle').attr('font-size',12).attr('font-weight',600).text('Consumer (T2)');
+      svg.append('text').attr('x',600).attr('y',104).attr('text-anchor','middle').attr('font-size',11).attr('fill','#4a587a').text('print(balance); balance--');
+      // signal light
+      svg.append('rect').attr('x',330).attr('y',30).attr('width',60).attr('height',24).attr('rx',3).attr('class','light').attr('fill','#fbfaf6');
+      svg.append('circle').attr('id','lightDot').attr('cx',360).attr('cy',42).attr('r',8).attr('class','light go');
+      svg.append('text').attr('x',360).attr('y',74).attr('text-anchor','middle').attr('font-size',11).attr('fill','#4a587a').text('signal');
+      // buffer
+      svg.append('rect').attr('class','buf').attr('x',320).attr('y',150).attr('width',80).attr('height',54).attr('rx',3);
+      svg.append('text').attr('x',360).attr('y',144).attr('text-anchor','middle').attr('font-size',11).attr('fill','#4a587a').text('balance');
+      svg.append('text').attr('id','bufVal').attr('class','buf-val').attr('x',360).attr('y',177).text(buffer);
+      // arrows
+      svg.append('path').attr('d','M200,90 L320,162').attr('stroke','#1b2a4e').attr('stroke-width',1.2).attr('fill','none').attr('marker-end','url(#cArr)');
+      svg.append('path').attr('d','M400,162 L520,90').attr('stroke','#1b2a4e').attr('stroke-width',1.2).attr('fill','none').attr('marker-end','url(#cArr)');
+      const defs=svg.append('defs');
+      defs.append('marker').attr('id','cArr').attr('viewBox','0 0 10 10').attr('refX',9).attr('refY',5).attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto').append('path').attr('d','M0,0 L10,5 L0,10 z').attr('fill','#1b2a4e');
+    }
+    function setLight(state){
+      d3.select('#lightDot').attr('class','light '+(state?'go':'stop'));
+    }
+    function logLine(text,cls){
+      const s=document.createElement('span');
+      s.style.display='block';
+      s.style.color = cls==='err'?'#f0d4d4':cls==='ok'?'#e9efdb':'#cfdef0';
+      s.textContent=text;
+      log.appendChild(s); log.scrollTop=log.scrollHeight;
+    }
+    function step(){
+      tick++;
+      const useSem=semChk.checked;
+      if(useSem){
+        // alternate producer/consumer
+        if(tick%2===1){
+          buffer++; logLine(`tick ${tick}: sem_wait → producer increments → ${buffer} → sem_post`,'ok');
+        } else {
+          if(buffer>0){ logLine(`tick ${tick}: sem_wait → consumer reads ${buffer} → decrements → ${buffer-1} → sem_post`,'ok'); buffer--; }
+          else { logLine(`tick ${tick}: consumer waits (buffer empty)`,'info'); }
+        }
+        setLight(true);
+      } else {
+        // race: both read same value, both write
+        const a=buffer, b=buffer;
+        const before=buffer;
+        // simulate: both read 'before', producer writes before+1, consumer writes before-1 — but consumer wins (last writer)
+        const r=Math.random();
+        if(r<0.45){
+          buffer=before+1;
+          logLine(`tick ${tick}: RACE — both read ${before}, producer wrote ${before+1} last → ${buffer}`,'err');
+        } else if(r<0.9){
+          buffer=before-1;
+          logLine(`tick ${tick}: RACE — both read ${before}, consumer wrote ${before-1} last → ${buffer}`,'err');
+        } else {
+          buffer=before;
+          logLine(`tick ${tick}: RACE — increments and decrements collide → no net change but inconsistency`,'err');
+        }
+        setLight(false);
+      }
+      d3.select('#bufVal').text(buffer);
+    }
+    function start(){
+      if(running){ running=false; clearInterval(timer); timer=null; return; }
+      running=true; timer=setInterval(step,1000);
+    }
+    function reset(){
+      buffer=0; tick=0; running=false; if(timer){clearInterval(timer);timer=null;}
+      log.innerHTML=''; setupStatic(); setLight(semChk.checked);
+    }
+    document.getElementById('cStart').addEventListener('click',start);
+    document.getElementById('cReset').addEventListener('click',reset);
+    semChk.addEventListener('change',()=>setLight(semChk.checked));
+    setupStatic(); setLight(false);
+  })();
+
+  // ----- DeadlockSim -----
+  (function(){
+    const svg=d3.select('#deadSvg');
+    const verdict=document.getElementById('dVerdict');
+    const procs=[{id:'P1',x:120,y:60},{id:'P2',x:120,y:200},{id:'P3',x:600,y:60},{id:'P4',x:600,y:200}];
+    const reses=[{id:'R1',x:300,y:60},{id:'R2',x:300,y:200},{id:'R3',x:440,y:60},{id:'R4',x:440,y:200}];
+    let edges=[]; // {from,to,type: 'hold' (R->P) or 'request' (P->R)}
+
+    function draw(){
+      svg.selectAll('*').remove();
+      const defs=svg.append('defs');
+      defs.append('marker').attr('id','dArr').attr('viewBox','0 0 10 10').attr('refX',9).attr('refY',5).attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto').append('path').attr('d','M0,0 L10,5 L0,10 z').attr('fill','#4a587a');
+      defs.append('marker').attr('id','dArrCyc').attr('viewBox','0 0 10 10').attr('refX',9).attr('refY',5).attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto').append('path').attr('d','M0,0 L10,5 L0,10 z').attr('fill','#a83232');
+      // detect cycle
+      const cyc=findCycle();
+      // edges
+      edges.forEach(e=>{
+        const a=node(e.from), b=node(e.to);
+        if(!a||!b) return;
+        const inCyc=cyc && cyc.includes(e.from) && cyc.includes(e.to) &&
+                    cyc.indexOf(e.to)===(cyc.indexOf(e.from)+1)%cyc.length;
+        svg.append('path').attr('class','edge'+(inCyc?' cycle':''))
+           .attr('d',`M${a.x+22},${a.y} L${b.x-22},${b.y}`)
+           .attr('marker-end', inCyc?'url(#dArrCyc)':'url(#dArr)');
+      });
+      // processes — circles
+      procs.forEach(p=>{
+        svg.append('circle').attr('class','proc').attr('cx',p.x).attr('cy',p.y).attr('r',22);
+        svg.append('text').attr('class','lbl').attr('x',p.x).attr('y',p.y).text(p.id);
+      });
+      // resources — squares
+      reses.forEach(r=>{
+        svg.append('rect').attr('class','res').attr('x',r.x-22).attr('y',r.y-22).attr('width',44).attr('height',44).attr('rx',3);
+        svg.append('text').attr('class','lbl').attr('x',r.x).attr('y',r.y).text(r.id);
+      });
+      verdict.className='verdict '+(cyc?'bad':'good');
+      verdict.textContent = cyc
+        ? 'DEADLOCK detected — cycle through ' + cyc.join(' → ') + ' → ' + cyc[0]
+        : 'No cycle — system is currently safe';
+    }
+    function node(id){ return procs.find(n=>n.id===id) || reses.find(n=>n.id===id); }
+    function findCycle(){
+      // build adjacency
+      const adj={}; edges.forEach(e=>{ (adj[e.from]=adj[e.from]||[]).push(e.to); });
+      const all=[...procs,...reses].map(n=>n.id);
+      const WHITE=0, GRAY=1, BLACK=2;
+      const color={}; all.forEach(n=>color[n]=WHITE);
+      const stack=[];
+      let cycle=null;
+      function dfs(n){
+        if(cycle) return;
+        color[n]=GRAY; stack.push(n);
+        for(const next of (adj[n]||[])){
+          if(cycle) return;
+          if(color[next]===GRAY){
+            const i=stack.indexOf(next);
+            cycle=stack.slice(i);
+            return;
+          } else if(color[next]===WHITE){
+            dfs(next);
+          }
+        }
+        color[n]=BLACK; stack.pop();
+      }
+      for(const n of all){ if(color[n]===WHITE) dfs(n); if(cycle) break; }
+      return cycle;
+    }
+    function preset1(){ // deadlock
+      edges=[
+        {from:'R1', to:'P1'}, // P1 holds R1
+        {from:'P1', to:'R3'}, // P1 requests R3
+        {from:'R3', to:'P3'}, // P3 holds R3
+        {from:'P3', to:'R4'}, // P3 requests R4
+        {from:'R4', to:'P4'}, // P4 holds R4
+        {from:'P4', to:'R2'}, // P4 requests R2
+        {from:'R2', to:'P2'}, // P2 holds R2
+        {from:'P2', to:'R1'}, // P2 requests R1 — closes cycle
+      ];
+      draw();
+    }
+    function preset2(){ // safe
+      edges=[
+        {from:'R1', to:'P1'},
+        {from:'P2', to:'R1'},
+        {from:'R3', to:'P3'},
+        {from:'R4', to:'P4'},
+      ];
+      draw();
+    }
+    function rand(){
+      edges=[];
+      procs.forEach(p=>{
+        const r=reses[Math.floor(Math.random()*4)];
+        if(Math.random()<0.7) edges.push({from:r.id,to:p.id});
+      });
+      procs.forEach(p=>{
+        const r=reses[Math.floor(Math.random()*4)];
+        if(Math.random()<0.7) edges.push({from:p.id,to:r.id});
+      });
+      draw();
+    }
+    document.getElementById('dPreset1').addEventListener('click',preset1);
+    document.getElementById('dPreset2').addEventListener('click',preset2);
+    document.getElementById('dRandom').addEventListener('click',rand);
+    document.getElementById('dClear').addEventListener('click',()=>{edges=[];draw();});
+    preset1();
+  })();
+</script>
+</body>
+</html>

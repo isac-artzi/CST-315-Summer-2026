@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Topic 2 — Processes and Threads · CST-315</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg:#f5f3ee; --ink:#1b2a4e; --ink-soft:#4a587a; --paper:#fbfaf6;
+    --accent:#2e7d6b; --accent-soft:#cfe6df;
+    --rule:rgba(27,42,78,0.18);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.55}
+  .page{max-width:1080px;margin:0 auto;padding:28px 32px 80px}
+  header.topic-header{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:28px}
+  .crumb{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .crumb .pill{background:var(--accent);color:var(--paper);padding:2px 8px;border-radius:2px;margin-right:8px;font-weight:600}
+  h1.topic-title{font-size:30px;margin:8px 0 6px;letter-spacing:-.01em;font-weight:700}
+  .topic-meta{font-size:13px;color:var(--ink-soft)}
+  .topic-meta strong{color:var(--ink)}
+  .objectives{margin-top:14px;background:var(--paper);border:1px solid var(--ink);border-left:4px solid var(--accent);padding:14px 18px;border-radius:2px}
+  .objectives h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft)}
+  .objectives ol{margin:0;padding-left:22px;font-size:14px}
+  .objectives li{margin-bottom:4px}
+  .factory-panel{margin-top:28px;background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:18px 20px}
+  .factory-panel h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .factory-panel .ctx-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+  .factory-panel p{margin:0 0 8px;font-size:14px}
+  .factory-panel .meta{font-size:12px;color:var(--ink-soft)}
+  .mini-factory svg{width:100%;height:auto;max-height:220px;display:block}
+  .concept{margin-top:36px;padding-top:24px;border-top:1px solid var(--rule)}
+  .concept .num{display:inline-block;background:var(--ink);color:var(--paper);width:26px;height:26px;border-radius:50%;text-align:center;line-height:26px;font-size:13px;font-weight:700;margin-right:8px}
+  .concept h2{font-size:22px;margin:0 0 10px;font-weight:600}
+  .concept p{font-size:15px;margin:0 0 12px}
+  .diagram{background:var(--paper);border:1px solid var(--rule);border-radius:2px;padding:14px;margin:14px 0}
+  .diagram .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:8px}
+  .factory-callout{background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 14px;margin:14px 0;font-size:14px}
+  .factory-callout strong{color:var(--accent);font-weight:700}
+  .sim{background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:16px;margin:16px 0}
+  .sim h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .sim .sim-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .sim button,.sim select,.sim input[type=text]{background:var(--bg);border:1px solid var(--ink);color:var(--ink);padding:5px 10px;font-size:12px;font-family:inherit;border-radius:2px;cursor:pointer}
+  .sim input[type=text]{font-family:'Menlo','Consolas',monospace;cursor:text;min-width:240px}
+  .sim button:hover{background:var(--ink);color:var(--paper)}
+  .sim .hint{font-size:12px;color:var(--ink-soft)}
+  /* Lifecycle */
+  .lifecycle svg{width:100%;max-height:320px;display:block}
+  .lifecycle .state-circle{fill:var(--paper);stroke:var(--ink);stroke-width:2}
+  .lifecycle .state-circle.active{fill:var(--accent);stroke:var(--accent)}
+  .lifecycle .state-label{font-size:12px;font-weight:600;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+  .lifecycle .edge{stroke:var(--ink-soft);stroke-width:1.5;fill:none}
+  .lifecycle .edge-label{font-size:11px;fill:var(--ink-soft);paint-order:stroke fill;stroke:var(--paper);stroke-width:3;stroke-linejoin:round}
+  /* Fork sim */
+  .fork-stage{background:var(--paper);border:1px dashed var(--ink);border-radius:2px;padding:12px;min-height:260px}
+  .fork-stage svg{width:100%;height:auto;max-height:280px}
+  .fork-node rect{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}
+  .fork-node.active rect{fill:var(--accent);stroke:var(--accent)}
+  .fork-node text{font-family:'Menlo','Consolas',monospace;font-size:11px;fill:var(--ink);dominant-baseline:central}
+  .fork-node.active text{fill:var(--paper)}
+  .fork-edge{stroke:var(--ink-soft);stroke-width:1.5;fill:none}
+  .fork-step-log{font-family:'Menlo','Consolas',monospace;font-size:12px;background:var(--ink);color:var(--accent-soft);padding:10px;border-radius:3px;max-height:160px;overflow-y:auto;margin-top:8px}
+  .fork-step-log .step{display:block;color:#cfe6df}
+  .fork-step-log .step.cur{color:#f3d9bf;font-weight:700}
+  /* Check, bridge, footer */
+  .check{margin-top:36px;padding:18px 20px;background:var(--paper);border:1px solid var(--ink);border-radius:2px}
+  .check h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .check ol{margin:0;padding-left:22px}
+  .check li{margin-bottom:12px;font-size:14px}
+  .check details{margin-top:6px;font-size:13px;color:var(--ink-soft)}
+  .check summary{cursor:pointer;color:var(--accent);font-weight:600;list-style:none}
+  .check summary::-webkit-details-marker{display:none}
+  .check summary::before{content:"▸ "}
+  .check details[open] summary::before{content:"▾ "}
+  .bridge{margin-top:28px;padding:18px 20px;background:var(--paper);border:1px solid var(--ink);border-left:4px solid var(--accent);border-radius:2px}
+  .bridge h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .bridge .item{font-size:14px;margin-bottom:10px}
+  .bridge .item strong{color:var(--ink)}
+  footer.topic-footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--ink);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px}
+  footer a{color:var(--accent);text-decoration:none;font-weight:600}
+  footer a:hover{text-decoration:underline}
+  .mermaid{background:var(--paper);padding:12px;border-radius:2px}
+  .pcb{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;background:var(--paper);border:1px solid var(--ink);padding:12px;border-radius:2px;font-family:'Menlo','Consolas',monospace;font-size:12px}
+  .pcb .row{display:flex;justify-content:space-between;border-bottom:1px dashed var(--rule);padding:3px 0}
+  .pcb .row span:first-child{color:var(--ink-soft)}
+  .pcb .row span:last-child{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="topic-header">
+  <div class="crumb"><span class="pill">Topic 2</span> CST-315 · Operating Systems Lecture &amp; Lab</div>
+  <h1 class="topic-title">Processes and Threads</h1>
+  <div class="topic-meta">Reading: <strong>Stallings, Chapters 3 &amp; 4</strong> · Lab questions 1–4 · Project 2 (Command Line Interpreter) · CLC Assignment 1 (Producer/Consumer) · Topic 2 Quiz</div>
+  <div class="objectives">
+    <h2>Topic objectives (from syllabus)</h2>
+    <ol>
+      <li>Develop a shell by implementing the command line interpreter.</li>
+      <li>Implement basic process management.</li>
+      <li>Differentiate between processes and threads.</li>
+      <li>Implement shell functionality to work in batch mode.</li>
+      <li>Select and utilize data structures appropriate for a variety of design concepts, principles, tools, and problem-solving strategies.</li>
+    </ol>
+  </div>
+</header>
+
+<section class="factory-panel">
+  <h2>Where this topic sits in the factory</h2>
+  <div class="ctx-grid">
+    <div>
+      <p>Topic 2 zooms in on the <strong>Factory Floor</strong>. We meet the work orders (processes), the clipboards attached to them (PCBs), and the tasks on each order that can be split across helpers (threads). We also formalize how the front desk hands a job to the floor: <code>fork()</code> creates a new clipboard, <code>exec()</code> swaps the work order on that clipboard, and <code>wait()</code> blocks the dispatcher until the order returns.</p>
+      <p>By the end of this topic, your shell will fork a child for every command you type and wait for it to finish. Batch mode does the same thing, just reading commands from a file instead of from you.</p>
+      <p class="meta">Open: <a href="../Factory_OS_Master.html?highlight=cpu" style="color:var(--accent)">Factory floor (full view)</a></p>
+    </div>
+    <div class="mini-factory">
+      <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="308" height="20" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <text x="14" y="20" font-size="9" font-weight="600" fill="#1b2a4e" opacity="0.5">MANAGER'S OFFICE</text>
+        <rect x="6" y="34" width="80" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <text x="14" y="48" font-size="9" font-weight="600" fill="#1b2a4e" opacity="0.5">FRONT DESK</text>
+        <rect x="92" y="34" width="140" height="76" rx="2" fill="#fbfaf6" stroke="#2e7d6b" stroke-width="2.5"/>
+        <text x="100" y="48" font-size="9" font-weight="700" fill="#2e7d6b">FLOOR (this topic)</text>
+        <text x="100" y="60" font-size="8" fill="#4a587a">processes + threads</text>
+        <circle cx="160" cy="86" r="8" fill="#2e7d6b" stroke="#1b2a4e"/>
+        <rect x="174" y="78" width="46" height="20" rx="1" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="197" y="89" font-size="8" text-anchor="middle" fill="#1b2a4e">PCB</text>
+        <rect x="238" y="34" width="76" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <text x="246" y="48" font-size="9" font-weight="600" fill="#1b2a4e" opacity="0.5">RECORDS</text>
+        <rect x="6" y="116" width="80" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="92" y="116" width="140" height="50" rx="2" fill="#fbfaf6" stroke="#2e7d6b" stroke-width="2.5"/>
+        <text x="100" y="130" font-size="9" font-weight="700" fill="#2e7d6b">WAIT QUEUE</text>
+        <text x="100" y="142" font-size="8" fill="#4a587a">blocked processes</text>
+        <rect x="238" y="116" width="76" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="172" width="308" height="22" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">1</span>Program vs process — the most useful distinction in this course</h2>
+  <p>A <strong>program</strong> is a static collection of instructions and data sitting on disk — the file <code>ls</code> in <code>/bin/ls</code>. A <strong>process</strong> is a running instance of a program: code loaded into memory, a stack, a heap, file descriptors, a current state, and a unique process ID (PID). One program can have many processes; close all your browser windows and reopen them, and the same program produces brand-new processes with brand-new PIDs.</p>
+  <p>The OS tracks every process with a <strong>Process Control Block</strong> (PCB) — a kernel data structure with everything needed to suspend and resume the process: PID, parent PID (PPID), program counter, register snapshot, memory pointers, open file table, accounting info, signal state, scheduling info. Context switching is, mechanically, saving one PCB and loading another.</p>
+  <div class="diagram">
+    <div class="label">A PCB at a glance</div>
+    <div class="pcb">
+      <div class="row"><span>PID</span><span>1042</span></div>
+      <div class="row"><span>PPID</span><span>1023</span></div>
+      <div class="row"><span>State</span><span>Running</span></div>
+      <div class="row"><span>Priority</span><span>20</span></div>
+      <div class="row"><span>Program counter</span><span>0x4012a8</span></div>
+      <div class="row"><span>Stack pointer</span><span>0x7ffd...e8</span></div>
+      <div class="row"><span>Open FDs</span><span>0,1,2,3,7</span></div>
+      <div class="row"><span>Memory map</span><span>0x400000–0x7ff…</span></div>
+      <div class="row"><span>Signal mask</span><span>0x00000000</span></div>
+      <div class="row"><span>Working dir</span><span>/home/isac</span></div>
+    </div>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> The PCB is the clipboard attached to a work order. When the supervisor pulls a worker off one order and puts them on another, the worker hangs the current clipboard on the rack and grabs the next one. That swap — clipboard out, clipboard in — is a context switch.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">2</span>The five-state process lifecycle</h2>
+  <p>Most modern OSes model a process as moving through a small set of states: <strong>New</strong> (being created), <strong>Ready</strong> (eligible to run, waiting for a CPU), <strong>Running</strong> (currently on a CPU), <strong>Waiting/Blocked</strong> (waiting for I/O or a synchronization event), and <strong>Terminated</strong> (finished, awaiting cleanup). Transitions are caused by events: admission, scheduling, preemption, I/O completion, exit.</p>
+  <p>Linux extends this with finer-grained states like <code>S</code> (interruptible sleep), <code>D</code> (uninterruptible sleep), <code>T</code> (stopped), <code>Z</code> (zombie — terminated but not yet reaped by its parent). You will see these in <code>ps</code> output. A zombie process exists because its parent has not yet called <code>wait()</code> to read its exit status — the clipboard is still hanging on the rack.</p>
+
+  <div class="sim lifecycle">
+    <h3>Live: step a process through its states</h3>
+    <div class="sim-controls">
+      <button id="lcStep">Advance state</button>
+      <button id="lcReset">Reset</button>
+      <span class="hint">Current state: <strong id="lcCurrent">New</strong></span>
+    </div>
+    <svg id="lcSvg" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> New = paperwork being filled out at the front desk. Ready = clipboard sitting in the inbound staging area. Running = clipboard on an active station. Waiting = clipboard on the "waiting on parts" rack while a runner fetches what's needed. Terminated = the order is done; the floor sweeper just hasn't picked up the clipboard yet (Linux calls that a zombie).
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">3</span>Threads — multiple workers on one work order</h2>
+  <p>A <strong>thread</strong> is a single sequential flow of execution within a process. A process can have many threads. All threads in a process share the same address space, open files, and other resources, but each thread has its own program counter, registers, and stack. That sharing is the point: threads can communicate by reading and writing common memory, which is much cheaper than the inter-process communication needed when separate processes want to coordinate.</p>
+  <p>Threads are how a single program does many things at once: a web browser uses threads for the UI, network I/O, JavaScript execution, and rendering. The trade-off is that shared memory makes concurrency bugs (race conditions, deadlocks) possible. We will tackle that head-on in Topic 3.</p>
+  <div class="diagram">
+    <div class="label">Process vs threads</div>
+    <pre class="mermaid">
+flowchart LR
+  subgraph P["Process (one address space)"]
+    direction TB
+    H[Heap shared] --- T1
+    H --- T2
+    H --- T3
+    T1[Thread 1<br/>own stack, PC, regs]
+    T2[Thread 2<br/>own stack, PC, regs]
+    T3[Thread 3<br/>own stack, PC, regs]
+    F[Open files, signals — shared]
+  end
+    </pre>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> A thread is a task on a work order that a helper can pick up in parallel with the lead worker. The clipboard is shared — both can read and write it — but each has their own tools and own place in the procedure.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">4</span>fork(), exec(), wait() — the three calls your shell lives on</h2>
+  <p><code>fork()</code> creates a new process by copying the current one. After the call, two processes exist: the parent (which gets the child's PID as the return value) and the child (which gets <code>0</code>). They share the same code right after the fork; everything that distinguishes them happens because they branch on the return value.</p>
+  <p><code>exec()</code> (and its variants <code>execv</code>, <code>execvp</code>, <code>execlp</code>) replaces the current process image with a new program. The PID stays the same; the code, data, heap, and stack are replaced. You almost never call <code>exec</code> alone — you <code>fork</code> first, then have the child <code>exec</code>, leaving the parent free to do other work.</p>
+  <p><code>wait()</code> (or <code>waitpid()</code>) blocks the parent until a child terminates and reaps its exit status. Without <code>wait</code>, the child becomes a zombie. With <code>wait</code>, the kernel cleans the child up and tells the parent how it finished.</p>
+
+  <div class="sim">
+    <h3>Live: ForkVisualizationSim — watch the shell launch a command</h3>
+    <div class="sim-controls">
+      <input type="text" id="forkCmd" placeholder='try: ls -l' value="ls -l" autocomplete="off">
+      <button id="forkStep">Step</button>
+      <button id="forkAuto">Auto-play</button>
+      <button id="forkReset">Reset</button>
+    </div>
+    <div class="fork-stage">
+      <svg id="forkSvg" viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="fork-step-log" id="forkLog"></div>
+  </div>
+
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> <code>fork</code> is the dispatcher photocopying the work order and the clipboard. <code>exec</code> is taking the copy and stamping a new job description on it. <code>wait</code> is the dispatcher leaning over the wall doing nothing useful until the helper comes back with the completed order.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">5</span>Interactive mode and batch mode</h2>
+  <p>The shell you build for Project 2 has two operating modes. <strong>Interactive mode</strong> prints a prompt, reads one line, parses, forks, executes, waits, and loops. <strong>Batch mode</strong> opens a file passed on the command line, reads commands until EOF, executes them — and the syllabus requires those commands to run <em>concurrently</em> when separated by semicolons, with the shell waiting until all of them finish before returning to the prompt.</p>
+  <p>The mechanical difference is just where the input comes from (<code>stdin</code> vs a file handle). The interesting difference is concurrency: a batch line like <code>ls -l; touch file; grep foo file2</code> requires three forks before the first <code>wait</code>, which means your wait logic must handle multiple outstanding children. That's the data-structure question objective 5 asks about: how do you track them all?</p>
+  <div class="diagram">
+    <div class="label">Interactive vs batch shell flow</div>
+    <pre class="mermaid">
+flowchart TB
+  start([start]) --> mode{argc &gt; 1?}
+  mode -- no --> ia[Print prompt]
+  ia --> ra[Read line from stdin]
+  mode -- yes --> ob[Open batch file]
+  ob --> rb[Read line from file]
+  ra --> parse[Parse line into commands]
+  rb --> parse
+  parse --> spawn[fork each command]
+  spawn --> wait[wait for ALL children]
+  wait --> done{EOF or quit?}
+  done -- no --> mode
+  done -- yes --> exit([exit])
+    </pre>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Interactive mode is the dispatcher taking orders one at a time over the counter. Batch mode is the dispatcher reading a stack of pre-printed orders from a clipboard, photocopying them all, and sending them out at once — then waiting for every worker to return before picking up the next stack.
+  </div>
+</section>
+
+<section class="check">
+  <h2>Check for understanding</h2>
+  <ol>
+    <li>
+      A process calls <code>fork()</code>. List three things that are identical in parent and child immediately after, and three things that differ.
+      <details><summary>Show a sample answer</summary>
+        Identical: code, data, heap, open file descriptors (initially), working directory, user ID, signal handlers. Different: PID, PPID, return value of fork (0 in child, child PID in parent), resource accounting counters reset, pending signals/alarms cleared in child.
+      </details>
+    </li>
+    <li>
+      Why does a typical shell call <code>fork</code> + <code>exec</code> instead of just <code>exec</code>?
+      <details><summary>Show a sample answer</summary>
+        Because <code>exec</code> replaces the calling process. If the shell called <code>exec("ls")</code> directly, the shell itself would be replaced by <code>ls</code> and the user would never get back to a prompt. Forking first creates a child to do the replacement, leaving the shell intact.
+      </details>
+    </li>
+    <li>
+      What is a zombie process, and how does it get cleaned up?
+      <details><summary>Show a sample answer</summary>
+        A zombie is a terminated process whose parent has not yet called <code>wait()</code> to read its exit status. The kernel keeps a minimal record (PID + exit status) so the parent can collect it. When the parent calls <code>wait()</code>, the record is freed. If the parent dies first, the zombie is re-parented to <code>init</code> (PID 1), which reaps it.
+      </details>
+    </li>
+    <li>
+      In a batch line <code>ls; touch f; grep foo f</code>, your shell needs to launch all three concurrently and only return to the prompt after all complete. Sketch the data structure you'd use to track outstanding children.
+      <details><summary>Show a sample answer</summary>
+        A small array or list of child PIDs is enough. After forking all three, loop calling <code>waitpid(-1, &amp;status, 0)</code> until every PID in the list has been reaped (or use <code>wait()</code> in a loop and decrement a counter). You may also want to store start time and command string for diagnostics.
+      </details>
+    </li>
+  </ol>
+</section>
+
+<section class="bridge">
+  <h2>Bridge to graded work</h2>
+  <div class="item"><strong>Project 2 — Command Line Interpreter.</strong> Implement the prompt-fork-exec-wait loop in C. Support interactive and batch modes. Support multi-command lines separated by semicolons, running concurrently. Define an exit shortcut (CTRL-X is a fine choice). Activity 2 of this topic builds the minimal version you'll grow into Project 2.</div>
+  <div class="item"><strong>CLC Assignment 1 — Producer and Consumer.</strong> Two threads sharing a static buffer. The producer keeps producing; the consumer keeps consuming. Implement <code>put()</code> and <code>get()</code> using <code>pthread</code>, without semaphores (just <code>sleep</code> and <code>wakeup</code> are allowed). This is the warm-up for Topic 3's full concurrency treatment.</div>
+  <div class="item"><strong>Topic 2 Quiz.</strong> Covers Stallings Ch. 3–4: PCB contents, state transitions, threads vs processes, fork/exec semantics.</div>
+  <div class="item"><strong>Lab Questions 1–4.</strong> Process creation sequence, processor status when not running, fundamental forms of concurrency, thread coordination. All map to the concept sections above.</div>
+</section>
+
+<footer class="topic-footer">
+  <div><a href="../activities/Topic_2_Activities.md">In-class activities for this topic →</a></div>
+  <div><a href="../Factory_OS_Master.html">Open the full factory visualization →</a></div>
+</footer>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad:true, theme:'base',
+    themeVariables:{background:'#fbfaf6',primaryColor:'#fbfaf6',primaryTextColor:'#1b2a4e',primaryBorderColor:'#1b2a4e',lineColor:'#4a587a',fontFamily:'Inter, -apple-system, sans-serif',fontSize:'13px'},
+    flowchart:{curve:'basis'}
+  });
+
+  // ----- ProcessLifecycleSim (shared layout) -----
+  (function(){
+    const RADIUS=38;
+    const positions={'New':{x:90,y:200},'Ready':{x:240,y:200},'Running':{x:410,y:200},'Waiting':{x:410,y:70},'Terminated':{x:640,y:200}};
+    const states=Object.keys(positions);
+    const walk=['New','Ready','Running','Waiting','Ready','Running','Terminated'];
+    const edges=[
+      {d:'M128,200 L202,200',           lx:165,ly:188,label:'admitted'},
+      {d:'M276,187 Q325,140 374,187',    lx:325,ly:128,label:'scheduled'},
+      {d:'M374,213 Q325,260 276,213',    lx:325,ly:272,label:'preempted'},
+      {d:'M410,162 L410,108',            lx:444,ly:140,label:'I/O wait'},
+      {d:'M380,93 Q316,123 270,177',     lx:298,ly:106,label:'I/O done'},
+      {d:'M448,200 L602,200',            lx:525,ly:188,label:'exit'},
+    ];
+    let current='New';
+    const svg=d3.select('#lcSvg');
+    const defs=svg.append('defs');
+    defs.append('marker').attr('id','lcArrow').attr('viewBox','0 0 10 10').attr('refX',9).attr('refY',5).attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto').append('path').attr('d','M0,0 L10,5 L0,10 z').attr('fill','#4a587a');
+    const content=svg.append('g');
+    function render(){
+      content.selectAll('*').remove();
+      edges.forEach(e=>{
+        content.append('path').attr('class','edge').attr('d',e.d).attr('marker-end','url(#lcArrow)');
+        content.append('text').attr('class','edge-label').attr('x',e.lx).attr('y',e.ly).attr('text-anchor','middle').text(e.label);
+      });
+      states.forEach(s=>{
+        const p=positions[s];
+        content.append('circle').attr('class','state-circle'+(current===s?' active':'')).attr('cx',p.x).attr('cy',p.y).attr('r',RADIUS);
+        content.append('text').attr('class','state-label').attr('x',p.x).attr('y',p.y).attr('fill',current===s?'#fbfaf6':'#1b2a4e').text(s);
+      });
+      document.getElementById('lcCurrent').textContent=current;
+    }
+    document.getElementById('lcStep').addEventListener('click',()=>{const i=walk.indexOf(current);current=walk[(i+1)%walk.length];render();});
+    document.getElementById('lcReset').addEventListener('click',()=>{current='New';render();});
+    render();
+  })();
+
+  // ----- ForkVisualizationSim -----
+  (function(){
+    const svg=d3.select('#forkSvg');
+    const logEl=document.getElementById('forkLog');
+    const cmdInput=document.getElementById('forkCmd');
+    let step=0; let timer=null;
+
+    // 5 conceptual steps
+    function steps(cmd){
+      const tokens=cmd.trim().split(/\s+/);
+      return [
+        {phase:'before fork()', nodes:[{id:'sh',label:'shell\nPID 1042',x:120,y:60,active:true}], edges:[], log:'shell waiting at prompt — one process'},
+        {phase:'fork() returns', nodes:[
+          {id:'sh',label:'shell (parent)\nPID 1042',x:120,y:60,active:true},
+          {id:'ch',label:'child\nPID 1043\nidentical copy',x:420,y:60,active:true}
+        ], edges:[{from:'sh',to:'ch'}], log:'fork(): parent gets child PID 1043; child gets 0'},
+        {phase:'parent calls wait()', nodes:[
+          {id:'sh',label:'shell\nPID 1042\nin wait()',x:120,y:60,active:false},
+          {id:'ch',label:'child\nPID 1043\nstill copy of shell',x:420,y:60,active:true}
+        ], edges:[{from:'sh',to:'ch'}], log:'parent blocks on wait(); child decides what to run next'},
+        {phase:'child calls exec()', nodes:[
+          {id:'sh',label:'shell\nPID 1042\nblocked',x:120,y:60,active:false},
+          {id:'ch',label:tokens[0]+'\nPID 1043 (same)\ncode replaced',x:420,y:60,active:true}
+        ], edges:[{from:'sh',to:'ch'}], log:`execvp("${tokens[0]}", argv) — PID stays 1043, code is now ${tokens[0]}`},
+        {phase:'child exits, parent resumes', nodes:[
+          {id:'sh',label:'shell\nPID 1042\nresumed',x:120,y:60,active:true},
+          {id:'ch',label:tokens[0]+'\nexit(0)\nreaped',x:420,y:60,active:false}
+        ], edges:[{from:'sh',to:'ch'}], log:'child exit(0); wait() returns; shell prints prompt'},
+      ];
+    }
+
+    function renderStep(s){
+      svg.selectAll('*').remove();
+      // defs
+      const defs=svg.append('defs');
+      defs.append('marker').attr('id','fkArrow').attr('viewBox','0 0 10 10').attr('refX',9).attr('refY',5).attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto').append('path').attr('d','M0,0 L10,5 L0,10 z').attr('fill','#4a587a');
+      // edges
+      s.edges.forEach(e=>{
+        const a=s.nodes.find(n=>n.id===e.from), b=s.nodes.find(n=>n.id===e.to);
+        if(!a||!b) return;
+        svg.append('path').attr('class','fork-edge').attr('d',`M${a.x+90},${a.y+30} L${b.x-30},${b.y+30}`).attr('marker-end','url(#fkArrow)');
+      });
+      // nodes
+      s.nodes.forEach(n=>{
+        const g=svg.append('g').attr('class','fork-node'+(n.active?' active':'')).attr('transform',`translate(${n.x},${n.y})`);
+        const lines=n.label.split('\n');
+        const height=Math.max(50, 22+lines.length*16);
+        g.append('rect').attr('x',0).attr('y',0).attr('width',180).attr('height',height).attr('rx',3);
+        lines.forEach((ln,i)=>{
+          g.append('text').attr('x',90).attr('y',16+i*16).attr('text-anchor','middle').text(ln);
+        });
+      });
+      // phase label
+      svg.append('text').attr('x',360).attr('y',200).attr('text-anchor','middle').attr('font-size',13).attr('fill','#1b2a4e').attr('font-weight',600).text('Step '+(step+1)+' of 5: '+s.phase);
+    }
+    function renderLog(allSteps){
+      logEl.innerHTML='';
+      for(let i=0;i<=step;i++){
+        const s=document.createElement('span');
+        s.className='step'+(i===step?' cur':'');
+        s.textContent=`[${i+1}] ${allSteps[i].log}`;
+        logEl.appendChild(s);
+      }
+      logEl.scrollTop=logEl.scrollHeight;
+    }
+    function play(){
+      const cmd=cmdInput.value||'ls';
+      const all=steps(cmd);
+      renderStep(all[step]); renderLog(all);
+    }
+    function next(){
+      const all=steps(cmdInput.value||'ls');
+      step=(step+1)%all.length;
+      renderStep(all[step]); renderLog(all);
+    }
+    document.getElementById('forkStep').addEventListener('click',next);
+    document.getElementById('forkReset').addEventListener('click',()=>{step=0;play();if(timer){clearInterval(timer);timer=null;}});
+    document.getElementById('forkAuto').addEventListener('click',()=>{
+      if(timer){clearInterval(timer);timer=null;return;}
+      timer=setInterval(next,1500);
+    });
+    play();
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Topic 6 — I/O and File Management · CST-315</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root{--bg:#f5f3ee;--ink:#1b2a4e;--ink-soft:#4a587a;--paper:#fbfaf6;--accent:#4a8a3d;--accent-soft:#d6e6cf;--rule:rgba(27,42,78,0.18)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.55}
+  .page{max-width:1080px;margin:0 auto;padding:28px 32px 80px}
+  header.topic-header{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:28px}
+  .crumb{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .crumb .pill{background:var(--accent);color:var(--paper);padding:2px 8px;border-radius:2px;margin-right:8px;font-weight:600}
+  h1.topic-title{font-size:30px;margin:8px 0 6px;letter-spacing:-.01em;font-weight:700}
+  .topic-meta{font-size:13px;color:var(--ink-soft)} .topic-meta strong{color:var(--ink)}
+  .objectives{margin-top:14px;background:var(--paper);border:1px solid var(--ink);border-left:4px solid var(--accent);padding:14px 18px;border-radius:2px}
+  .objectives h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft)}
+  .objectives ol{margin:0;padding-left:22px;font-size:14px} .objectives li{margin-bottom:4px}
+  .factory-panel{margin-top:28px;background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:18px 20px}
+  .factory-panel h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .factory-panel .ctx-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+  .factory-panel p{margin:0 0 8px;font-size:14px} .factory-panel .meta{font-size:12px;color:var(--ink-soft)}
+  .mini-factory svg{width:100%;height:auto;max-height:220px;display:block}
+  .concept{margin-top:36px;padding-top:24px;border-top:1px solid var(--rule)}
+  .concept .num{display:inline-block;background:var(--ink);color:var(--paper);width:26px;height:26px;border-radius:50%;text-align:center;line-height:26px;font-size:13px;font-weight:700;margin-right:8px}
+  .concept h2{font-size:22px;margin:0 0 10px;font-weight:600} .concept p{font-size:15px;margin:0 0 12px}
+  .diagram{background:var(--paper);border:1px solid var(--rule);border-radius:2px;padding:14px;margin:14px 0}
+  .diagram .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:8px}
+  .factory-callout{background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 14px;margin:14px 0;font-size:14px}
+  .factory-callout strong{color:var(--accent);font-weight:700}
+  .sim{background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:16px;margin:16px 0}
+  .sim h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .sim .sim-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .sim button,.sim input[type=text]{background:var(--bg);border:1px solid var(--ink);color:var(--ink);padding:5px 10px;font-size:12px;font-family:inherit;border-radius:2px;cursor:pointer}
+  .sim input[type=text]{font-family:'Menlo','Consolas',monospace;cursor:text;min-width:180px}
+  .sim button:hover{background:var(--ink);color:var(--paper)}
+  .sim .hint{font-size:12px;color:var(--ink-soft)}
+  .fstree svg{max-height:340px;width:100%}
+  .fstree .node-dir circle{fill:var(--accent);stroke:var(--ink);stroke-width:1.5}
+  .fstree .node-file circle{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}
+  .fstree .node-label{font-family:'Menlo','Consolas',monospace;font-size:11px;fill:var(--ink)}
+  .fstree .link{stroke:var(--ink-soft);stroke-width:1.2;fill:none}
+  .fstree .log{font-family:'Menlo','Consolas',monospace;font-size:12px;background:var(--ink);color:#d6e6cf;padding:10px;border-radius:3px;max-height:120px;overflow-y:auto;margin-top:8px}
+  .check,.bridge{margin-top:36px;padding:18px 20px;background:var(--paper);border:1px solid var(--ink);border-radius:2px}
+  .bridge{border-left:4px solid var(--accent)}
+  .check h2,.bridge h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .check ol{margin:0;padding-left:22px} .check li{margin-bottom:12px;font-size:14px}
+  .check details{margin-top:6px;font-size:13px;color:var(--ink-soft)}
+  .check summary{cursor:pointer;color:var(--accent);font-weight:600;list-style:none}
+  .check summary::-webkit-details-marker{display:none}
+  .check summary::before{content:"▸ "} .check details[open] summary::before{content:"▾ "}
+  .bridge .item{font-size:14px;margin-bottom:10px} .bridge .item strong{color:var(--ink)}
+  footer.topic-footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--ink);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px}
+  footer a{color:var(--accent);text-decoration:none;font-weight:600} footer a:hover{text-decoration:underline}
+  .mermaid{background:var(--paper);padding:12px;border-radius:2px}
+  .alloc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+  .alloc-card{border:1px solid var(--rule);background:var(--paper);padding:12px;border-radius:3px;font-size:13px}
+  .alloc-card h4{margin:0 0 8px;color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="topic-header">
+  <div class="crumb"><span class="pill">Topic 6</span> CST-315 · Operating Systems Lecture &amp; Lab</div>
+  <h1 class="topic-title">I/O and File Management</h1>
+  <div class="topic-meta">Reading: <strong>Stallings, Chapters 11 &amp; 12</strong> · Lab questions 1–4 · Project 6 (File System Manager) · Topics 5–6 Quiz</div>
+  <div class="objectives">
+    <h2>Topic objectives (from syllabus)</h2>
+    <ol>
+      <li>Implement a file system with a hierarchical directory structure.</li>
+      <li>Manage the file life cycle: create, modify, delete.</li>
+      <li>Manage the directory life cycle: create, modify, delete.</li>
+      <li>Explain code snippets to prevent the shell from collapsing with data loss.</li>
+    </ol>
+  </div>
+</header>
+
+<section class="factory-panel">
+  <h2>Where this topic sits in the factory</h2>
+  <div class="ctx-grid">
+    <div>
+      <p>Topic 6 covers the <strong>Records Room</strong> and the <strong>Loading Dock</strong>. The records room is your file system: drawers (directories) containing folders (files), tracked by checkout slips (inodes / file descriptors). The dock is I/O: trucks (devices) deliver and ship data, with an intercom (interrupts) that pauses the line when shipments arrive.</p>
+      <p>For Project 6 you build the records room from scratch. The hard part is not the CRUD — it's making sure your file storage and your virtual-memory storage (Project 4) don't overlap, or your shell collapses with data loss. The lesson hammers that point.</p>
+      <p class="meta">Open: <a href="../Factory_OS_Master.html?highlight=files" style="color:var(--accent)">Records Room</a> · <a href="../Factory_OS_Master.html?highlight=io" style="color:var(--accent)">Loading Dock</a></p>
+    </div>
+    <div class="mini-factory">
+      <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="308" height="20" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="34" width="80" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="92" y="34" width="140" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="238" y="34" width="76" height="76" rx="2" fill="#fbfaf6" stroke="#4a8a3d" stroke-width="2.5"/>
+        <text x="246" y="48" font-size="9" font-weight="700" fill="#4a8a3d">RECORDS</text>
+        <text x="246" y="60" font-size="8" fill="#4a587a">files + dirs</text>
+        <rect x="250" y="68" width="56" height="38" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <line x1="250" y1="80" x2="306" y2="80" stroke="#1b2a4e"/>
+        <line x1="250" y1="92" x2="306" y2="92" stroke="#1b2a4e"/>
+        <rect x="6" y="116" width="80" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="92" y="116" width="140" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="238" y="116" width="76" height="50" rx="2" fill="#fbfaf6" stroke="#4a8a3d" stroke-width="2.5"/>
+        <text x="246" y="130" font-size="9" font-weight="700" fill="#4a8a3d">DOCK</text>
+        <text x="246" y="142" font-size="8" fill="#4a587a">I/O</text>
+        <rect x="6" y="172" width="308" height="22" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">1</span>The file abstraction</h2>
+  <p>A <strong>file</strong> is a named, persistent stream of bytes. That's it. Everything more sophisticated — formats, structure, semantics — is built on top by the program reading or writing the file. The OS guarantees that a file has a name, lives somewhere on disk (or another device), can be opened, read, written, sought, closed, and deleted.</p>
+  <p>The kernel tracks an open file with a <strong>file descriptor</strong>: a small integer the process passes to <code>read</code>, <code>write</code>, <code>lseek</code>, and <code>close</code>. Per-process file descriptors point into a system-wide open-file table, which points to inodes. Three file descriptors are opened by default: 0 = stdin, 1 = stdout, 2 = stderr.</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> A file is a labeled folder in the archive. An inode is the index card describing that folder — where it physically sits, who owns it, when it was last touched. A file descriptor is the checkout slip the worker carries while using the folder.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">2</span>Directories and the hierarchical namespace</h2>
+  <p>A <strong>directory</strong> is itself a file, with contents that map names to inode numbers. The root directory <code>/</code> is the entry point; subdirectories form a tree (or, with symbolic and hard links, a DAG). A pathname like <code>/home/isac/CST-315/Topic2/lopeShell.c</code> is walked one component at a time: lookup <code>home</code> in <code>/</code>, lookup <code>isac</code> in <code>/home</code>, and so on.</p>
+  <p>Project 6 implements the same idea: a tree of directory nodes, each holding child files and child directories, with create/rename/delete/move/duplicate operations on both. Deleting a non-empty directory requires a recursion (or a flag like <code>-r</code> to confirm intent) so users don't accidentally lose entire subtrees.</p>
+
+  <div class="sim fstree">
+    <h3>Live: FileSystemTree — operate on a directory tree</h3>
+    <div class="sim-controls">
+      <input type="text" id="fsCmd" placeholder='try: mkdir /tmp/proj   touch /tmp/proj/main.c   ls /tmp' autocomplete="off">
+      <button id="fsRun">Run</button>
+      <button id="fsReset">Reset tree</button>
+    </div>
+    <svg id="fsSvg" viewBox="0 0 720 320" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="log" id="fsLog"></div>
+  </div>
+
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Directories are filing cabinet drawers; subdirectories are folders within drawers; files are documents inside the folders. A path is the route from the main hallway down to the specific document.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">3</span>File allocation — three classic schemes</h2>
+  <p>The file system has to map a logical file (a stream of bytes) to physical blocks on disk. Three schemes appear in every OS textbook:</p>
+  <div class="alloc-grid">
+    <div class="alloc-card">
+      <h4>Contiguous</h4>
+      Store the file in consecutive blocks. Fast sequential and random reads. External fragmentation. Hard to grow a file past its allocation.
+    </div>
+    <div class="alloc-card">
+      <h4>Linked</h4>
+      Each block points to the next. No fragmentation. Sequential reads are fine. Random reads are awful — you have to chase pointers. FAT is a variant with the chain centralized.
+    </div>
+    <div class="alloc-card">
+      <h4>Indexed</h4>
+      A per-file index block lists all block addresses. Random access is O(1). Direct/indirect/double-indirect block schemes (Unix inodes) support both small and very large files.
+    </div>
+  </div>
+  <p>Modern systems (ext4, XFS, Btrfs, ZFS) use extents — runs of contiguous blocks — combined with indexed metadata. The result: good random access without the rigidity of pure contiguous allocation.</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Contiguous is "store this whole job's documents on one shelf." Linked is "the first document points to the second, the second to the third." Indexed is "here's a master sheet listing every shelf this job uses."
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">4</span>I/O — buffering, blocking, and interrupts</h2>
+  <p>Devices are slow compared to CPUs. To bridge the gap, the OS uses <strong>buffering</strong> — staging data in memory between the device and the program. Reads pre-fetch ahead; writes accumulate before flushing. The kernel's <strong>buffer cache</strong> (or page cache, since they merged in modern Linux) holds recently-accessed blocks so repeated reads come from RAM.</p>
+  <p>I/O can be <strong>blocking</strong> (the process sleeps until the operation completes), <strong>non-blocking</strong> (the call returns immediately with whatever's available), or <strong>asynchronous</strong> (the kernel completes the operation in the background and signals when done). Linux's modern <code>io_uring</code> interface (2019+) uses shared submission/completion queues for very high-throughput async I/O — used by every major database engine.</p>
+  <div class="diagram">
+    <div class="label">A read system call's journey</div>
+    <pre class="mermaid">
+flowchart LR
+  P[Process: read fd, buf, n] --> SC[syscall trap]
+  SC --> K[Kernel: check buffer cache]
+  K -- hit --> CP[Copy bytes to user buffer]
+  K -- miss --> DRV[Device driver issues read]
+  DRV --> WAIT[Process blocked]
+  DEV[Device finishes] --> INT[Interrupt]
+  INT --> WAKE[Kernel wakes process]
+  WAKE --> CP
+  CP --> RET[Return to user code]
+    </pre>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> A truck (I/O device) brings a shipment. While the truck is in transit, the worker who placed the order is parked in the wait queue. The intercom (interrupt) sounds when the truck arrives; the supervisor moves the worker back to the ready queue.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">5</span>RAID — when one disk isn't enough</h2>
+  <p>RAID (Redundant Array of Independent Disks) is a family of techniques for combining multiple disks for performance, reliability, or both. The levels you should be able to compare on the quiz:</p>
+  <p><strong>RAID 0 — striping.</strong> Blocks alternate across disks. Doubles throughput on N-disk array. No redundancy — one disk failure loses everything. <strong>RAID 1 — mirroring.</strong> Every block written to two (or more) disks. Reads can be served from either. Survives any single disk failure. Half the usable capacity. <strong>RAID 5 — striping with distributed parity.</strong> Parity block per stripe rotates across disks. Survives one disk failure. Read-heavy workloads do well; writes are expensive due to parity computation. <strong>RAID 10 — mirror of stripes.</strong> Pair up disks into mirrors, then stripe across the mirrors. High performance and reliability; expensive in capacity.</p>
+  <p>Project 6 doesn't ask you to implement RAID, but you should be able to discuss when each level fits — a database log gets RAID 10, an archive gets RAID 6, a scratch space gets RAID 0.</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> RAID 0 is "split this load across two trucks for speed." RAID 1 is "send two trucks with the same load in case one breaks down." RAID 5 is "three trucks, the third one carrying a checksum of the first two — losing any one, you can reconstruct."
+  </div>
+</section>
+
+<section class="check">
+  <h2>Check for understanding</h2>
+  <ol>
+    <li>
+      A process opens the same file twice with two separate <code>open()</code> calls. Does it get the same file descriptor? The same inode reference?
+      <details><summary>Show a sample answer</summary>
+        Different file descriptors (each call returns a new one). The same underlying inode, but the two open-file-table entries are independent — each has its own file offset, so reads on fd 3 don't advance fd 4's position.
+      </details>
+    </li>
+    <li>
+      Linked allocation is bad for random access. Why? Give the worst-case cost in I/O operations to read byte N of a file.
+      <details><summary>Show a sample answer</summary>
+        To reach block K you must follow K-1 pointers, each requiring its own block read (cache permitting). Worst case is one block-read per file block traversed: O(N) where N is the block count. Indexed allocation reads the index block once, then the target block — O(1) for files that fit in one index block.
+      </details>
+    </li>
+    <li>
+      Your Project 4 VMM stores swap pages at disk addresses 0x1000–0x5FFF. Your Project 6 file system allocates blocks starting at 0x1000. What happens, and how do you prevent it?
+      <details><summary>Show a sample answer</summary>
+        They overwrite each other. Files get corrupted with swap data; swap loses pages that processes need to resume. Prevention: a single allocator owns the disk; the VMM and FS each reserve disjoint regions at startup, or the FS treats the swap region as already-allocated. The project guide explicitly warns about this.
+      </details>
+    </li>
+    <li>
+      Why is the buffer cache so important to performance, given that modern SSDs are themselves fast?
+      <details><summary>Show a sample answer</summary>
+        Even fast SSDs are at least 100× slower than RAM for random reads. Repeated reads (config files, libraries, indexes) that miss the cache pay the SSD's cost every time. The cache turns repeated reads into RAM accesses. Plus: the syscall overhead alone is significant if cache is bypassed.
+      </details>
+    </li>
+  </ol>
+</section>
+
+<section class="bridge">
+  <h2>Bridge to graded work</h2>
+  <div class="item"><strong>Project 6 — File System Manager.</strong> Implement the 13 commands listed in the project guide. The data structure choice (allocation method) is yours to defend. Activity 2 builds the <code>mkdir</code> and <code>rmdir</code> primitives that everything else hangs off.</div>
+  <div class="item"><strong>Topics 5–6 Quiz.</strong> Stallings Ch. 9–12. The file-system half covers inodes, descriptors, allocation methods, RAID.</div>
+  <div class="item"><strong>Project 4 integration.</strong> Project 6 must not overlap Project 4's swap area. Confirm your allocator regions before writing a single block.</div>
+</section>
+
+<footer class="topic-footer">
+  <div><a href="../activities/Topic_6_Activities.md">In-class activities for this topic →</a></div>
+  <div><a href="../Factory_OS_Master.html">Open the full factory visualization →</a></div>
+</footer>
+
+</div>
+
+<script>
+  mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{background:'#fbfaf6',primaryColor:'#fbfaf6',primaryTextColor:'#1b2a4e',primaryBorderColor:'#1b2a4e',lineColor:'#4a587a',fontFamily:'Inter, -apple-system, sans-serif',fontSize:'13px'},flowchart:{curve:'basis'}});
+
+  // ----- FileSystemTree -----
+  (function(){
+    const svg=d3.select('#fsSvg');
+    const log=document.getElementById('fsLog');
+    let inodeCounter=1;
+    function makeDir(name){ return {name, type:'d', inode:inodeCounter++, children:[]}; }
+    function makeFile(name){ return {name, type:'f', inode:inodeCounter++}; }
+    let root;
+    function reset(){
+      inodeCounter=1;
+      root=makeDir('/');
+      const home=makeDir('home'); root.children.push(home);
+      const isac=makeDir('isac'); home.children.push(isac);
+      const cst=makeDir('CST-315'); isac.children.push(cst);
+      cst.children.push(makeFile('README.md'));
+      cst.children.push(makeFile('hello.c'));
+      const tmp=makeDir('tmp'); root.children.push(tmp);
+      log.innerHTML=''; logLine('Tree reset.','info');
+      render();
+    }
+    function logLine(text,cls){
+      const s=document.createElement('span'); s.style.display='block';
+      s.style.color = cls==='err'?'#f0d4d4':cls==='ok'?'#d6e6cf':'#cfdef0';
+      s.textContent=text;
+      log.appendChild(s); log.scrollTop=log.scrollHeight;
+    }
+    function findNode(path){
+      if(path==='/') return {parent:null, node:root, name:'/'};
+      const parts=path.split('/').filter(p=>p.length);
+      let cur=root, parent=null, name='/';
+      for(const p of parts){
+        if(cur.type!=='d') return null;
+        const ch=cur.children.find(c=>c.name===p);
+        if(!ch) return null;
+        parent=cur; cur=ch; name=p;
+      }
+      return {parent, node:cur, name};
+    }
+    function parentPath(path){
+      if(path==='/') return null;
+      const i=path.lastIndexOf('/');
+      return {parent: i===0?'/':path.slice(0,i), name:path.slice(i+1)};
+    }
+    function cmdMkdir(path){
+      const pp=parentPath(path);
+      if(!pp){ logLine('cannot mkdir /','err'); return; }
+      const parent=findNode(pp.parent);
+      if(!parent || parent.node.type!=='d'){ logLine(`mkdir: parent "${pp.parent}" does not exist`,'err'); return; }
+      if(parent.node.children.some(c=>c.name===pp.name)){ logLine(`mkdir: "${path}" exists`,'err'); return; }
+      parent.node.children.push(makeDir(pp.name));
+      logLine(`mkdir ${path} → inode ${inodeCounter-1}`,'ok'); render();
+    }
+    function cmdTouch(path){
+      const pp=parentPath(path);
+      if(!pp){ logLine('cannot touch /','err'); return; }
+      const parent=findNode(pp.parent);
+      if(!parent || parent.node.type!=='d'){ logLine(`touch: parent "${pp.parent}" does not exist`,'err'); return; }
+      if(parent.node.children.some(c=>c.name===pp.name)){ logLine(`touch: "${path}" already exists (no-op)`,'info'); return; }
+      parent.node.children.push(makeFile(pp.name));
+      logLine(`touch ${path} → inode ${inodeCounter-1}`,'ok'); render();
+    }
+    function cmdRm(path, recursive){
+      const pp=parentPath(path);
+      if(!pp){ logLine('cannot rm /','err'); return; }
+      const parent=findNode(pp.parent);
+      if(!parent){ logLine(`rm: "${path}" not found`,'err'); return; }
+      const idx=parent.node.children.findIndex(c=>c.name===pp.name);
+      if(idx<0){ logLine(`rm: "${path}" not found`,'err'); return; }
+      const target=parent.node.children[idx];
+      if(target.type==='d' && target.children.length>0 && !recursive){
+        logLine(`rm: "${path}" is non-empty (use -r)`,'err'); return;
+      }
+      parent.node.children.splice(idx,1);
+      logLine(`removed ${path}${recursive?' -r':''}`,'ok'); render();
+    }
+    function cmdLs(path){
+      const r=findNode(path||'/');
+      if(!r){ logLine(`ls: "${path}" not found`,'err'); return; }
+      if(r.node.type!=='d'){ logLine(r.node.name,'info'); return; }
+      logLine(`ls ${path||'/'}: ${r.node.children.map(c=>c.name+(c.type==='d'?'/':'')).join('  ')||'(empty)'}`,'info');
+    }
+    function exec(cmd){
+      const t=cmd.trim().split(/\s+/);
+      const op=t[0];
+      if(op==='mkdir' && t[1]) cmdMkdir(t[1]);
+      else if(op==='touch' && t[1]) cmdTouch(t[1]);
+      else if(op==='rm' && t[1]){
+        const flag=t[1]==='-r' || t[1]==='-rf';
+        const path=flag?t[2]:t[1];
+        cmdRm(path, flag);
+      }
+      else if(op==='rmdir' && t[1]) cmdRm(t[1], false);
+      else if(op==='ls') cmdLs(t[1]||'/');
+      else logLine(`unknown command: ${cmd}. Try: mkdir <path>, touch <path>, rm [-r] <path>, ls [<path>]`,'err');
+    }
+    function render(){
+      svg.selectAll('*').remove();
+      const W=720, H=320;
+      // Convert to d3 hierarchy
+      const tree=d3.tree().size([W-40, H-60]).nodeSize([110, 80]);
+      const rootNode=d3.hierarchy(root, d=>d.children||null);
+      tree(rootNode);
+      const nodes=rootNode.descendants();
+      const links=rootNode.links();
+      // center
+      const xs=nodes.map(n=>n.x);
+      const minX=Math.min(...xs), maxX=Math.max(...xs);
+      const offsetX=(W-(maxX-minX))/2 - minX;
+      const g=svg.append('g').attr('transform',`translate(${offsetX},30)`);
+      // links
+      g.selectAll('.link').data(links).join('path').attr('class','link')
+        .attr('d', d=>`M${d.source.x},${d.source.y} C${d.source.x},${(d.source.y+d.target.y)/2} ${d.target.x},${(d.source.y+d.target.y)/2} ${d.target.x},${d.target.y}`);
+      // nodes
+      const nodeG=g.selectAll('.node').data(nodes).join('g')
+        .attr('class', d=>'node-'+(d.data.type==='d'?'dir':'file'))
+        .attr('transform', d=>`translate(${d.x},${d.y})`);
+      nodeG.append('circle').attr('r',10);
+      nodeG.append('text').attr('class','node-label').attr('x',0).attr('y',-14).attr('text-anchor','middle').text(d=>d.data.name);
+      nodeG.append('text').attr('font-size',9).attr('fill','#4a587a').attr('x',0).attr('y',26).attr('text-anchor','middle').text(d=>'#'+d.data.inode);
+    }
+    document.getElementById('fsRun').addEventListener('click',()=>{const v=document.getElementById('fsCmd').value;if(v)exec(v);document.getElementById('fsCmd').value='';});
+    document.getElementById('fsCmd').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('fsRun').click();});
+    document.getElementById('fsReset').addEventListener('click',reset);
+    reset();
+  })();
+</script>
+</body>
+</html>

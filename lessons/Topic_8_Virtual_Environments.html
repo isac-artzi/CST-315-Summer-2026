@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Topic 8 — Virtual Environments · CST-315</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root{--bg:#f5f3ee;--ink:#1b2a4e;--ink-soft:#4a587a;--paper:#fbfaf6;--accent:#2f8a8a;--accent-soft:#d2e8e8;--rule:rgba(27,42,78,0.18)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.55}
+  .page{max-width:1080px;margin:0 auto;padding:28px 32px 80px}
+  header.topic-header{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:28px}
+  .crumb{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .crumb .pill{background:var(--accent);color:var(--paper);padding:2px 8px;border-radius:2px;margin-right:8px;font-weight:600}
+  h1.topic-title{font-size:30px;margin:8px 0 6px;letter-spacing:-.01em;font-weight:700}
+  .topic-meta{font-size:13px;color:var(--ink-soft)} .topic-meta strong{color:var(--ink)}
+  .objectives{margin-top:14px;background:var(--paper);border:1px solid var(--ink);border-left:4px solid var(--accent);padding:14px 18px;border-radius:2px}
+  .objectives h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft)}
+  .objectives ol{margin:0;padding-left:22px;font-size:14px} .objectives li{margin-bottom:4px}
+  .factory-panel{margin-top:28px;background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:18px 20px}
+  .factory-panel h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .factory-panel .ctx-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+  .factory-panel p{margin:0 0 8px;font-size:14px} .factory-panel .meta{font-size:12px;color:var(--ink-soft)}
+  .mini-factory svg{width:100%;height:auto;max-height:220px;display:block}
+  .concept{margin-top:36px;padding-top:24px;border-top:1px solid var(--rule)}
+  .concept .num{display:inline-block;background:var(--ink);color:var(--paper);width:26px;height:26px;border-radius:50%;text-align:center;line-height:26px;font-size:13px;font-weight:700;margin-right:8px}
+  .concept h2{font-size:22px;margin:0 0 10px;font-weight:600} .concept p{font-size:15px;margin:0 0 12px}
+  .diagram{background:var(--paper);border:1px solid var(--rule);border-radius:2px;padding:14px;margin:14px 0}
+  .diagram .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:8px}
+  .factory-callout{background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 14px;margin:14px 0;font-size:14px}
+  .factory-callout strong{color:var(--accent);font-weight:700}
+  .modern{background:#ebf7f7;border:1px dashed var(--accent);padding:10px 14px;border-radius:3px;margin:14px 0;font-size:14px}
+  .modern strong{color:var(--accent)}
+  .sim{background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:16px;margin:16px 0}
+  .sim h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .sim .sim-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .sim button,.sim select{background:var(--bg);border:1px solid var(--ink);color:var(--ink);padding:5px 10px;font-size:12px;font-family:inherit;border-radius:2px;cursor:pointer}
+  .sim button:hover{background:var(--ink);color:var(--paper)}
+  .vsim svg{width:100%;max-height:380px}
+  .vsim .layer{stroke:var(--ink);stroke-width:1.5}
+  .vsim .layer.hw{fill:#1b2a4e} .vsim .layer.hw text{fill:#fbfaf6}
+  .vsim .layer.hyper{fill:#2f8a8a} .vsim .layer.hyper text{fill:#fbfaf6}
+  .vsim .layer.host{fill:#cfdef0}
+  .vsim .layer.guest{fill:#d2e8e8}
+  .vsim .layer.app{fill:#fbfaf6}
+  .vsim .layer.cont{fill:#f0e3c8}
+  .vsim text{font-size:12px;font-weight:600;fill:#1b2a4e;text-anchor:middle;dominant-baseline:central}
+  .vsim .desc{font-size:13px;color:var(--ink-soft);margin-top:10px}
+  .check,.bridge{margin-top:36px;padding:18px 20px;background:var(--paper);border:1px solid var(--ink);border-radius:2px}
+  .bridge{border-left:4px solid var(--accent)}
+  .check h2,.bridge h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .check ol{margin:0;padding-left:22px} .check li{margin-bottom:12px;font-size:14px}
+  .check details{margin-top:6px;font-size:13px;color:var(--ink-soft)}
+  .check summary{cursor:pointer;color:var(--accent);font-weight:600;list-style:none}
+  .check summary::-webkit-details-marker{display:none}
+  .check summary::before{content:"▸ "} .check details[open] summary::before{content:"▾ "}
+  .bridge .item{font-size:14px;margin-bottom:10px} .bridge .item strong{color:var(--ink)}
+  footer.topic-footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--ink);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px}
+  footer a{color:var(--accent);text-decoration:none;font-weight:600} footer a:hover{text-decoration:underline}
+  .mermaid{background:var(--paper);padding:12px;border-radius:2px}
+  .compare-table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0;background:var(--paper)}
+  .compare-table th,.compare-table td{border:1px solid var(--rule);padding:8px;text-align:left;vertical-align:top}
+  .compare-table th{background:var(--accent-soft);color:var(--ink);font-weight:700}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="topic-header">
+  <div class="crumb"><span class="pill">Topic 8</span> CST-315 · Operating Systems Lecture &amp; Lab</div>
+  <h1 class="topic-title">Virtual Environments</h1>
+  <div class="topic-meta">Reading: <strong>Stallings, Chapter 14</strong> · Lab questions 1–4 · Assignment 4 (Injection Virus) · Assignment 5 (Assessing Virtualization Software) · Project 7 (Shell Presentation) · Topics 7–8 Quiz</div>
+  <div class="objectives">
+    <h2>Topic objectives (from syllabus)</h2>
+    <ol>
+      <li>Examine current trends in software virtualization.</li>
+      <li>Analyze virtualization tools.</li>
+      <li>Draw the architecture of the virtualization environment.</li>
+      <li>Convey complex technical information to a wide range of individuals using various presentation strategies.</li>
+    </ol>
+  </div>
+</header>
+
+<section class="factory-panel">
+  <h2>Where this topic sits in the factory</h2>
+  <div class="ctx-grid">
+    <div>
+      <p>Topic 8 covers the <strong>Mini-Factories</strong>. The building still has one set of walls and one electrical grid, but inside, multiple self-contained factories operate independently. A <em>building manager</em> (hypervisor) allocates space, power, and dock access; each mini-factory runs its own OS, schedules its own work, and is none the wiser about the others.</p>
+      <p>This is the topic Project 7 wraps up — your shell presentation. Assignment 5 has you survey real virtualization products in industry and recommend one for a specific need. The lesson gives you the framework to do that recommendation soundly.</p>
+      <p class="meta">Open: <a href="../Factory_OS_Master.html?highlight=vms" style="color:var(--accent)">The mini-factories</a></p>
+    </div>
+    <div class="mini-factory">
+      <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="308" height="20" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="34" width="80" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="92" y="34" width="140" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="238" y="34" width="76" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="116" width="80" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="92" y="116" width="140" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="238" y="116" width="76" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="172" width="308" height="22" rx="2" fill="#fbfaf6" stroke="#2f8a8a" stroke-width="3"/>
+        <text x="14" y="187" font-size="9" font-weight="700" fill="#2f8a8a">MINI-FACTORIES (VMs &amp; containers)</text>
+        <rect x="200" y="176" width="32" height="14" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <rect x="234" y="176" width="32" height="14" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <rect x="268" y="176" width="32" height="14" fill="#fbfaf6" stroke="#1b2a4e"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">1</span>Why virtualize</h2>
+  <p>Three reasons. <strong>Consolidation</strong>: one physical machine runs many logical machines, lifting CPU utilization from typical-bare-metal 10–20% to typical-virtualized 60–80%. <strong>Isolation</strong>: tenants share hardware without sharing OSes; a kernel panic in one VM doesn't take down the others. <strong>Portability</strong>: a VM image moves between hosts without reinstalling; a container moves between hosts without reinstalling its dependencies either.</p>
+  <p>The cloud is built on this. AWS EC2 is hypervisor-managed VMs. Lambda is a fast-start virtualized environment (Firecracker microVMs). ECS and EKS run containers orchestrated by Kubernetes. Every layer trades isolation for density and start time differently.</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Instead of building 10 small factories on 10 plots of land, you build one big building and rent out 10 walled-off shop floors. Each tenant thinks they have their own building. The landlord can rebalance space, fix the roof for everyone at once, and turn unused floors back to common space.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">2</span>Type-1 vs Type-2 hypervisors</h2>
+  <p>A <strong>Type-1 (bare-metal) hypervisor</strong> runs directly on the hardware. There is no host OS underneath. Examples: VMware ESXi, Microsoft Hyper-V, Xen, KVM (when configured as the only layer). Best performance and isolation; standard in cloud and data centers.</p>
+  <p>A <strong>Type-2 (hosted) hypervisor</strong> runs as an application on a normal host OS. Examples: VMware Workstation, Oracle VirtualBox, Parallels Desktop. Easier to install on a developer laptop; slightly more overhead because guest I/O has to traverse the host kernel.</p>
+
+  <div class="sim vsim">
+    <h3>Live: VirtualizationSim — switch among stack topologies</h3>
+    <div class="sim-controls">
+      <label>Stack:
+        <select id="vmStack">
+          <option value="bm">Bare metal (no virtualization)</option>
+          <option value="t1" selected>Type-1 hypervisor (e.g., ESXi, KVM)</option>
+          <option value="t2">Type-2 hypervisor (e.g., VirtualBox)</option>
+          <option value="ct">Containers (e.g., Docker)</option>
+          <option value="mv">MicroVMs (e.g., Firecracker)</option>
+        </select>
+      </label>
+    </div>
+    <svg id="vmSvg" viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="desc" id="vmDesc"></div>
+  </div>
+
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Type-1 is the building owner sitting in their office, managing tenants directly. Type-2 is a tenant who also sublets — they have their own factory and rent out subdivided spaces inside it. The latter is more convenient for a small landlord but adds an intermediate layer.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">3</span>Full virtualization, paravirtualization, and hardware assist</h2>
+  <p>Three approaches to making the guest's privileged instructions safe. <strong>Full virtualization</strong> traps every privileged instruction with binary translation or hardware-assist; the guest OS is unmodified. <strong>Paravirtualization</strong> modifies the guest OS to make explicit hypercalls instead of issuing privileged instructions — better performance, but the guest must be ported. <strong>Hardware-assisted virtualization</strong> uses CPU extensions (Intel VT-x, AMD-V) that let unmodified guests run privileged instructions directly, with the hypervisor only intercepting what truly needs intercepting.</p>
+  <p>Modern systems combine all three: hardware assist for the common path, paravirtualized device drivers (virtio) for I/O performance, and binary translation only as a fallback for unusual instructions.</p>
+  <div class="modern">
+    <strong>Modern callout.</strong> <em>Firecracker</em> (used by AWS Lambda and Fargate) is a minimal VMM written in Rust that starts a VM in ~125 ms with ~5 MiB of memory overhead. It strips a normal hypervisor down to only what serverless workloads need — and the trade-off chart is the same one your Assignment 5 table is filling in. Confidential computing extensions (AMD SEV-SNP, Intel TDX) take the next step: the host hypervisor cannot read VM memory at all.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">4</span>Containers vs VMs</h2>
+  <p>A <strong>container</strong> is not a virtual machine. It's a normal process on the host kernel, wrapped in Linux namespaces and cgroups so that it sees its own filesystem, process tree, network stack, and resource limits. There's no guest kernel, no hardware emulation, no boot. Start time: tens of milliseconds. Overhead: nearly zero. Isolation: only as strong as the host kernel.</p>
+  <p>VMs run a full guest kernel inside hardware-virtualized resources. Start time: seconds. Overhead: hundreds of MB of RAM. Isolation: a guest can crash; the host won't. Choose containers for density and developer ergonomics; choose VMs for hard isolation and multi-tenant workloads where the kernel must be the boundary.</p>
+  <table class="compare-table">
+    <tr><th>Dimension</th><th>VM</th><th>Container</th></tr>
+    <tr><td>Boundary</td><td>Hardware-virtualized hypervisor</td><td>Linux namespaces &amp; cgroups in host kernel</td></tr>
+    <tr><td>Guest kernel</td><td>Yes, separate</td><td>No, shares host kernel</td></tr>
+    <tr><td>Start time</td><td>seconds</td><td>milliseconds</td></tr>
+    <tr><td>RAM overhead per instance</td><td>~100 MB+</td><td>~MB</td></tr>
+    <tr><td>Density per host</td><td>tens</td><td>hundreds to thousands</td></tr>
+    <tr><td>Isolation</td><td>Strong (kernel boundary)</td><td>Process-level (kernel surface shared)</td></tr>
+    <tr><td>Use case</td><td>Multi-tenant cloud, mixed OS workloads</td><td>Microservices, CI, ephemeral compute</td></tr>
+  </table>
+  <div class="modern">
+    <strong>Modern callout.</strong> Kubernetes is the orchestrator that schedules containers across a fleet. CPU "shares" and memory "limits" you set in a pod spec become Linux <code>cgroup</code> parameters interpreted by CFS — the same scheduler from Topic 5. The OS concepts you've learned all term run the world's cloud infrastructure.
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> A VM is a separate mini-factory inside the building, with its own walls, power, and supervisor. A container is a roped-off section of the shared floor — the supervisor and power are shared, but the section has its own tools and rules.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">5</span>Picking a virtualization technology — the Assignment 5 question</h2>
+  <p>Assignment 5 asks you to pick a real workload, survey five virtualization products, score them against criteria (performance, cost, disaster recovery, HA, security, scaling, management), and recommend one. The framework: identify the workload's dominant constraint, then map products to that constraint.</p>
+  <p>Examples of workload-driven choices. <em>Mass-market multi-tenant SaaS hosting</em>: Type-1 hypervisor (ESXi or KVM) for tenant isolation; high investment in management tooling. <em>Internal microservices for a team</em>: containers + Kubernetes for density and CI speed. <em>Serverless event handlers</em>: microVMs (Firecracker) — VM-level isolation with container-level start time. <em>Developer laptop</em>: Type-2 (Docker Desktop, VirtualBox) for ease of install. <em>Embedded multi-OS device</em>: a small hypervisor like Xen with hardware partitioning.</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Different tenants need different walls. A shared hallway works for friendly small teams (containers). A locked office with its own utilities works for separate companies (Type-1 VMs). A modular pop-up unit with its own electrical kit works for short-term occupancy (microVMs).
+  </div>
+</section>
+
+<section class="check">
+  <h2>Check for understanding</h2>
+  <ol>
+    <li>
+      Why does a Type-2 hypervisor typically have higher I/O overhead than a Type-1?
+      <details><summary>Show a sample answer</summary>
+        Guest I/O on Type-1 goes guest → hypervisor → hardware. On Type-2 it goes guest → guest driver → hypervisor → host OS → host driver → hardware. The extra layer costs context switches and copies. Paravirtual device drivers (virtio) close most of the gap but not all of it.
+      </details>
+    </li>
+    <li>
+      A vendor claims their container platform offers "VM-level isolation." What should you ask to evaluate the claim?
+      <details><summary>Show a sample answer</summary>
+        Do they run each container in its own microVM (e.g., Kata Containers, gVisor with a kernel boundary, Firecracker per pod)? If not, "VM-level isolation" is marketing — the host kernel is still the shared attack surface. Confidential containers add cryptographic hardware boundaries on top, but the underlying isolation primitive is what matters.
+      </details>
+    </li>
+    <li>
+      Memory overcommit lets a hypervisor expose more total RAM to guests than the host has. How does this work, and where does it go wrong?
+      <details><summary>Show a sample answer</summary>
+        Guests don't use all their allocated RAM all the time. The hypervisor pages out cold guest memory to host disk (just like Topic 4's VMM does for processes). It goes wrong when every guest suddenly wants all its RAM — the host starts swapping aggressively, latency spikes, and the dreaded "noisy neighbor" effect appears.
+      </details>
+    </li>
+    <li>
+      Project 7 is a presentation. What's one Topic 8 concept worth showcasing if your shell ran inside a container?
+      <details><summary>Show a sample answer</summary>
+        Demonstrate that your shell — built around classical OS primitives (fork, exec, semaphores, paging, scheduling, files) — runs inside a Linux namespace/cgroup wrapper that uses the very same kernel primitives. The container is itself an OS-concepts artifact, not magic.
+      </details>
+    </li>
+  </ol>
+</section>
+
+<section class="bridge">
+  <h2>Bridge to graded work</h2>
+  <div class="item"><strong>Assignment 5 — Assessing Virtualization Software.</strong> Survey five real virtualization products against the criteria listed in the spec, score them, justify each score, recommend one for a stated workload. Activity 1 of this topic walks the methodology you'll apply.</div>
+  <div class="item"><strong>Project 7 — Shell Presentation.</strong> 5–7 minute screencast + slides. Demonstrate your shell. Explain your scheduler, your VMM, your file system choices, with diagrams from this course where useful. Activity 2 gets your shell running inside a container so you can demo it portably.</div>
+  <div class="item"><strong>Topics 7–8 Quiz.</strong> Stallings Ch. 13–14: embedded constraints, security mechanisms, and the virtualization spectrum.</div>
+</section>
+
+<footer class="topic-footer">
+  <div><a href="../activities/Topic_8_Activities.md">In-class activities for this topic →</a></div>
+  <div><a href="../Factory_OS_Master.html">Open the full factory visualization →</a></div>
+</footer>
+
+</div>
+
+<script>
+  mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{background:'#fbfaf6',primaryColor:'#fbfaf6',primaryTextColor:'#1b2a4e',primaryBorderColor:'#1b2a4e',lineColor:'#4a587a',fontFamily:'Inter, -apple-system, sans-serif',fontSize:'13px'},flowchart:{curve:'basis'}});
+
+  // VirtualizationSim
+  (function(){
+    const svg=d3.select('#vmSvg');
+    const desc=document.getElementById('vmDesc');
+    function box(layer, x, y, w, h, cls, label){
+      const g=layer.append('g').attr('class','layer '+cls);
+      g.append('rect').attr('x',x).attr('y',y).attr('width',w).attr('height',h).attr('rx',3).attr('class','layer '+cls);
+      g.append('text').attr('x',x+w/2).attr('y',y+h/2).text(label);
+    }
+    function clear(){ svg.selectAll('*').remove(); }
+    function bareMetal(){
+      clear();
+      box(svg, 60, 280, 600, 50, 'hw', 'Hardware');
+      box(svg, 60, 200, 600, 70, 'host', 'Host OS (Linux / Windows)');
+      box(svg, 60, 100, 200, 90, 'app', 'App A');
+      box(svg, 270, 100, 200, 90, 'app', 'App B');
+      box(svg, 480, 100, 180, 90, 'app', 'App C');
+      desc.textContent='Bare metal. One OS, multiple apps. The baseline this whole topic is comparing against.';
+    }
+    function type1(){
+      clear();
+      box(svg, 60, 280, 600, 50, 'hw', 'Hardware');
+      box(svg, 60, 210, 600, 60, 'hyper', 'Type-1 Hypervisor (ESXi / KVM / Xen)');
+      box(svg, 60, 90, 190, 110, 'guest', 'Guest OS A');
+      box(svg, 60, 30, 190, 50, 'app', 'App A');
+      box(svg, 265, 90, 190, 110, 'guest', 'Guest OS B');
+      box(svg, 265, 30, 190, 50, 'app', 'App B');
+      box(svg, 470, 90, 190, 110, 'guest', 'Guest OS C');
+      box(svg, 470, 30, 190, 50, 'app', 'App C');
+      desc.textContent='Type-1. Hypervisor sits directly on hardware. Multiple full guest OSes. Standard in data centers and clouds.';
+    }
+    function type2(){
+      clear();
+      box(svg, 60, 320, 600, 40, 'hw', 'Hardware');
+      box(svg, 60, 250, 600, 60, 'host', 'Host OS (macOS / Windows / Linux)');
+      box(svg, 60, 190, 600, 50, 'hyper', 'Type-2 Hypervisor (VirtualBox / VMware Workstation)');
+      box(svg, 60, 80, 280, 100, 'guest', 'Guest OS A');
+      box(svg, 60, 30, 280, 40, 'app', 'App A');
+      box(svg, 360, 80, 300, 100, 'guest', 'Guest OS B');
+      box(svg, 360, 30, 300, 40, 'app', 'App B');
+      desc.textContent='Type-2. Hypervisor runs as a host-OS application. Best for developer laptops. One extra layer between guest and hardware.';
+    }
+    function containers(){
+      clear();
+      box(svg, 60, 290, 600, 50, 'hw', 'Hardware');
+      box(svg, 60, 210, 600, 70, 'host', 'Host OS (single Linux kernel)');
+      // container engine
+      box(svg, 60, 160, 600, 40, 'hyper', 'Container Engine (Docker / containerd / runc)');
+      // 4 small containers
+      const cw=140, x0=60, y=40;
+      ['A','B','C','D'].forEach((l,i)=>{
+        box(svg, x0+i*(cw+8), y+50, cw, 100, 'cont', 'Container '+l);
+        box(svg, x0+i*(cw+8)+10, y+60, cw-20, 30, 'app', 'App '+l);
+      });
+      desc.textContent='Containers. No guest kernel. Each container is a process tree on the host kernel, isolated by namespaces and cgroups. High density, fast start, shared kernel.';
+    }
+    function microvms(){
+      clear();
+      box(svg, 60, 300, 600, 40, 'hw', 'Hardware');
+      box(svg, 60, 240, 600, 50, 'host', 'Host OS + KVM');
+      box(svg, 60, 190, 600, 40, 'hyper', 'Firecracker VMM (minimal Rust hypervisor)');
+      const cw=140, x0=60, y=40;
+      ['A','B','C','D'].forEach((l,i)=>{
+        box(svg, x0+i*(cw+8), y+50, cw, 130, 'guest', 'microVM '+l);
+        box(svg, x0+i*(cw+8)+8, y+80, cw-16, 30, 'cont', 'Kernel');
+        box(svg, x0+i*(cw+8)+8, y+118, cw-16, 50, 'app', 'App '+l);
+      });
+      desc.textContent='microVMs. Each instance has its own kernel for VM-level isolation, but stripped down to ~5 MiB and ~125 ms boot. Used by AWS Lambda.';
+    }
+    function update(){
+      const v=document.getElementById('vmStack').value;
+      if(v==='bm') bareMetal();
+      else if(v==='t1') type1();
+      else if(v==='t2') type2();
+      else if(v==='ct') containers();
+      else microvms();
+    }
+    document.getElementById('vmStack').addEventListener('change',update);
+    update();
+  })();
+</script>
+</body>
+</html>

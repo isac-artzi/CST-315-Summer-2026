@@ -1,0 +1,11 @@
+CST-315 Course Materials
+Copyright (c) 2026 Isac / Grand Canyon University CST-315 instructor.
+
+These materials are provided for educational use within CST-315 at
+Grand Canyon University.
+
+Redistribution outside the course is not authorized without permission.
+
+Student starters (under each topic's `starter/` directory) are intended
+for student use during the course. Instructor demos (under each topic's
+`demos/` directory) are not for student distribution.

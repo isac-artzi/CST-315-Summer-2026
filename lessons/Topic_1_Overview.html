@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Topic 1 — Overview of Computer Systems and Operating Systems · CST-315</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --ink: #1b2a4e;
+    --ink-soft: #4a587a;
+    --paper: #fbfaf6;
+    --accent: #c9742e;           /* Topic 1 accent */
+    --accent-soft: #f3d9bf;
+    --rule: rgba(27, 42, 78, 0.18);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.55;
+  }
+  .page { max-width: 1080px; margin: 0 auto; padding: 28px 32px 80px; }
+
+  /* Header */
+  header.topic-header {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 28px;
+  }
+  .crumb {
+    font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .crumb .pill {
+    background: var(--accent); color: var(--paper);
+    padding: 2px 8px; border-radius: 2px; margin-right: 8px; font-weight: 600;
+  }
+  h1.topic-title {
+    font-size: 30px; margin: 8px 0 6px; letter-spacing: -0.01em; font-weight: 700;
+  }
+  .topic-meta { font-size: 13px; color: var(--ink-soft); }
+  .topic-meta strong { color: var(--ink); }
+
+  /* Objectives box */
+  .objectives {
+    margin-top: 14px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-left: 4px solid var(--accent);
+    padding: 14px 18px;
+    border-radius: 2px;
+  }
+  .objectives h2 {
+    margin: 0 0 8px; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft);
+  }
+  .objectives ol { margin: 0; padding-left: 22px; font-size: 14px; }
+  .objectives li { margin-bottom: 4px; }
+
+  /* Factory context panel */
+  .factory-panel {
+    margin-top: 28px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    padding: 18px 20px;
+  }
+  .factory-panel h2 {
+    font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-soft); margin: 0 0 12px;
+  }
+  .factory-panel .ctx-grid {
+    display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start;
+  }
+  .factory-panel p { margin: 0 0 8px; font-size: 14px; }
+  .factory-panel .meta { font-size: 12px; color: var(--ink-soft); }
+  .mini-factory svg { width: 100%; height: auto; max-height: 220px; display: block; }
+
+  /* Concept sections */
+  .concept {
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+  }
+  .concept .num {
+    display: inline-block; background: var(--ink); color: var(--paper);
+    width: 26px; height: 26px; border-radius: 50%; text-align: center;
+    line-height: 26px; font-size: 13px; font-weight: 700; margin-right: 8px;
+  }
+  .concept h2 { font-size: 22px; margin: 0 0 10px; font-weight: 600; }
+  .concept p { font-size: 15px; margin: 0 0 12px; }
+  .diagram {
+    background: var(--paper); border: 1px solid var(--rule);
+    border-radius: 2px; padding: 14px; margin: 14px 0;
+  }
+  .diagram .label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-soft); margin-bottom: 8px;
+  }
+  .factory-callout {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .factory-callout strong { color: var(--accent); font-weight: 700; }
+
+  /* Simulations */
+  .sim {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    padding: 16px;
+    margin: 16px 0;
+  }
+  .sim h3 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-soft); margin: 0 0 12px;
+  }
+  .sim .sim-controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .sim button, .sim select, .sim input[type=text] {
+    background: var(--bg); border: 1px solid var(--ink); color: var(--ink);
+    padding: 5px 10px; font-size: 12px; font-family: inherit; border-radius: 2px;
+    cursor: pointer;
+  }
+  .sim input[type=text] {
+    font-family: 'Menlo','Consolas',monospace; cursor: text; min-width: 220px;
+  }
+  .sim button:hover { background: var(--ink); color: var(--paper); }
+
+  /* Shell Sim */
+  .shell-term {
+    background: #1b2a4e; color: #f3d9bf; font-family: 'Menlo','Consolas',monospace;
+    padding: 12px; border-radius: 3px; min-height: 180px; font-size: 13px;
+    overflow-y: auto; max-height: 280px;
+  }
+  .shell-term .prompt { color: #9bb8d5; }
+  .shell-term .echo { color: #f3d9bf; }
+  .shell-term .out { color: #cfdef0; }
+  .shell-term .sys { color: #c9742e; font-style: italic; }
+
+  /* Process Lifecycle Sim */
+  .lifecycle svg { width: 100%; max-height: 320px; display: block; }
+  .lifecycle .state-circle { fill: var(--paper); stroke: var(--ink); stroke-width: 2; }
+  .lifecycle .state-circle.active { fill: var(--accent); stroke: var(--accent); }
+  .lifecycle .state-label { font-size: 12px; font-weight: 600; fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+  .lifecycle .edge { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+  .lifecycle .edge-label {
+    font-size: 11px; fill: var(--ink-soft);
+    paint-order: stroke fill;
+    stroke: var(--paper); stroke-width: 3; stroke-linejoin: round;
+  }
+
+  /* Checks */
+  .check {
+    margin-top: 36px; padding: 18px 20px;
+    background: var(--paper); border: 1px solid var(--ink); border-radius: 2px;
+  }
+  .check h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-soft); margin: 0 0 12px;
+  }
+  .check ol { margin: 0; padding-left: 22px; }
+  .check li { margin-bottom: 12px; font-size: 14px; }
+  .check details { margin-top: 6px; font-size: 13px; color: var(--ink-soft); }
+  .check summary {
+    cursor: pointer; color: var(--accent); font-weight: 600;
+    list-style: none;
+  }
+  .check summary::-webkit-details-marker { display: none; }
+  .check summary::before { content: "▸ "; }
+  .check details[open] summary::before { content: "▾ "; }
+
+  /* Bridge */
+  .bridge {
+    margin-top: 28px; padding: 18px 20px;
+    background: var(--paper); border: 1px solid var(--ink); border-left: 4px solid var(--accent);
+    border-radius: 2px;
+  }
+  .bridge h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-soft); margin: 0 0 12px;
+  }
+  .bridge .item { font-size: 14px; margin-bottom: 10px; }
+  .bridge .item strong { color: var(--ink); }
+
+  /* Footer */
+  footer.topic-footer {
+    margin-top: 36px; padding-top: 16px;
+    border-top: 1px solid var(--ink);
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    font-size: 13px;
+  }
+  footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  footer a:hover { text-decoration: underline; }
+
+  /* Mermaid override */
+  .mermaid { background: var(--paper); padding: 12px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="topic-header">
+  <div class="crumb"><span class="pill">Topic 1</span> CST-315 · Operating Systems Lecture &amp; Lab</div>
+  <h1 class="topic-title">Overview of Computer Systems and Operating Systems</h1>
+  <div class="topic-meta">Reading: <strong>Stallings, Chapters 1 &amp; 2</strong> · Lab questions 1–4 · Project 1 (Familiarity with UNIX/Linux) · Topic 1 Quiz</div>
+
+  <div class="objectives">
+    <h2>Topic objectives (from syllabus)</h2>
+    <ol>
+      <li>Demonstrate familiarity with the features of a UNIX/Linux operating system.</li>
+      <li>Review UNIX/Linux shell scripting.</li>
+      <li>Compile and execute a simple program.</li>
+      <li>Develop a functional UNIX/Linux shell following the iterative stages of the software development life cycle (SDLC).</li>
+      <li>Solve classical and key problems associated with the design and functionality of operating systems.</li>
+      <li>Provide technical documentation of design processes, such as screenshots, code snippets, testing and/or other pertinent factors.</li>
+      <li>Establish efficient team processes that prioritize goal setting, task management, and problem-solving within the team.</li>
+    </ol>
+  </div>
+</header>
+
+<!-- FACTORY CONTEXT PANEL -->
+<section class="factory-panel">
+  <h2>Where this topic sits in the factory</h2>
+  <div class="ctx-grid">
+    <div>
+      <p>Topic 1 is the orientation tour. We walk the entire floor, name every zone, and meet the staff. By the end of this topic, you know the layout — the front desk that takes job tickets, the floor where stations run work orders, the staging racks and the off-site warehouse for materials, the records room for archives, the loading dock for shipments, and the manager's office that controls the restricted areas.</p>
+      <p>Everything we learn in later topics fits somewhere on this floor plan. Keep the map handy.</p>
+      <p class="meta">Open the full interactive view: <a href="../Factory_OS_Master.html" style="color: var(--accent);">Factory_OS_Master.html</a></p>
+    </div>
+    <div class="mini-factory">
+      <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="308" height="20" rx="2" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="14" y="20" font-size="9" font-weight="600" fill="#1b2a4e">MANAGER'S OFFICE (Kernel)</text>
+
+        <rect x="6" y="34" width="80" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="14" y="48" font-size="9" font-weight="600" fill="#1b2a4e">FRONT DESK</text>
+        <text x="14" y="60" font-size="8" fill="#4a587a">Shell</text>
+
+        <rect x="92" y="34" width="140" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="100" y="48" font-size="9" font-weight="600" fill="#1b2a4e">FLOOR</text>
+        <text x="100" y="60" font-size="8" fill="#4a587a">CPU + scheduler</text>
+        <circle cx="160" cy="90" r="6" fill="#c9742e" stroke="#1b2a4e"/>
+
+        <rect x="238" y="34" width="76" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="246" y="48" font-size="9" font-weight="600" fill="#1b2a4e">RECORDS</text>
+        <text x="246" y="60" font-size="8" fill="#4a587a">File system</text>
+
+        <rect x="6" y="116" width="80" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="14" y="130" font-size="9" font-weight="600" fill="#1b2a4e">RACKS</text>
+        <text x="14" y="142" font-size="8" fill="#4a587a">RAM</text>
+
+        <rect x="92" y="116" width="140" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="100" y="130" font-size="9" font-weight="600" fill="#1b2a4e">WAIT QUEUE</text>
+
+        <rect x="238" y="116" width="76" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="246" y="130" font-size="9" font-weight="600" fill="#1b2a4e">DOCK</text>
+        <text x="246" y="142" font-size="8" fill="#4a587a">I/O</text>
+
+        <rect x="6" y="172" width="226" height="22" rx="2" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="14" y="187" font-size="9" font-weight="600" fill="#1b2a4e">WAREHOUSE (virtual memory)</text>
+
+        <rect x="238" y="172" width="76" height="22" rx="2" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="246" y="187" font-size="9" font-weight="600" fill="#1b2a4e">VMs</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- CONCEPT 1 -->
+<section class="concept">
+  <h2><span class="num">1</span>The hardware stack the OS stands on</h2>
+  <p>An operating system manages four kinds of physical resources: a <strong>processor</strong> that executes instructions, <strong>main memory</strong> (RAM) that holds running programs and data, <strong>I/O modules</strong> that move data to and from devices, and a <strong>system bus</strong> that connects them. Stallings calls these the four major structural components of a computer (Ch. 1).</p>
+  <p>Each component has its own performance characteristics. The CPU is fast and expensive. RAM is fast but volatile and limited. Disks and devices are slow but large and persistent. The OS exists in large part to mediate the speed and capacity mismatches between these layers.</p>
+  <div class="diagram">
+    <div class="label">Hardware layers</div>
+    <pre class="mermaid">
+flowchart TB
+  U[User programs] --> OS[Operating System]
+  OS --> CPU[CPU]
+  OS --> MEM[Main Memory]
+  OS --> IO[I/O Modules]
+  CPU --- BUS((System Bus))
+  MEM --- BUS
+  IO --- BUS
+  IO --> DISK[(Disk)]
+  IO --> NET[(Network)]
+  IO --> DEV[(Devices)]
+    </pre>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> The CPU is the assembly-line station. RAM is the staging rack beside it. The disk is the off-site warehouse. The bus is the conveyor belt connecting everything. The OS is the management running the whole place.
+  </div>
+</section>
+
+<!-- CONCEPT 2 -->
+<section class="concept">
+  <h2><span class="num">2</span>What the OS actually does</h2>
+  <p>The OS plays three roles simultaneously. As a <strong>user-program interface</strong>, it exposes a way to launch and control programs — typically through a shell, a GUI, or an API. As a <strong>resource manager</strong>, it decides which program gets the CPU, the memory, the disk, and the network, and when. As an <strong>abstraction layer</strong>, it hides the messy details of specific hardware behind clean concepts like files, processes, and sockets.</p>
+  <p>A modern OS does this for many programs at once, on hardware with multiple cores, large but limited memory, and a mix of fast and slow devices. The mechanisms that make this work — processes, threads, scheduling, paging, file systems, drivers — are what the rest of this course unpacks.</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Management does three things. It takes orders (interface), assigns workers to orders (resource manager), and hides the chaos of the floor from the customer (abstraction). The customer says "run this program"; they don't say "load these bytes into frame 0x4000."
+  </div>
+</section>
+
+<!-- CONCEPT 3 -->
+<section class="concept">
+  <h2><span class="num">3</span>The shell — your interface to the factory</h2>
+  <p>A <strong>shell</strong> is a program that reads commands, parses them, and asks the OS to run them. It is the front-desk dispatcher: you hand it a ticket, it figures out which workers need to be involved, and it tells you when the job is done. Common UNIX/Linux shells are <code>bash</code>, <code>zsh</code>, and <code>sh</code>; in this course you will build your own (call it <code>lopeShell</code>).</p>
+  <p>A shell has two main modes. <strong>Interactive mode</strong> prompts you for one command at a time. <strong>Batch mode</strong> reads commands from a file and runs them without prompting. Project 2 will require both.</p>
+  <p>Behind the scenes, when the shell runs a command, it uses two system calls — <code>fork()</code> to create a child process and <code>exec()</code> to replace that child with the requested program — then <code>wait()</code> to pause until the child finishes. We'll formalize this in Topic 2.</p>
+
+  <div class="sim">
+    <h3>Live: ShellSim — type a command, watch the dispatch</h3>
+    <div class="sim-controls">
+      <input type="text" id="shellInput" placeholder='try: ls -l   |   pwd   |   echo hello   |   help' autocomplete="off">
+      <button id="shellRun">Run</button>
+      <button id="shellClear">Clear</button>
+    </div>
+    <div class="shell-term" id="shellOut">
+<span class="prompt">lopeShell&gt;</span> <span class="sys">Welcome. Type a command and press Run.</span>
+    </div>
+  </div>
+
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> The shell is the receptionist. You hand them a job ticket. They walk it back to the supervisor on the floor. The supervisor finds an open station. The work gets done. The receptionist comes back and tells you "done."
+  </div>
+</section>
+
+<!-- CONCEPT 4 -->
+<section class="concept">
+  <h2><span class="num">4</span>The UNIX/Linux command surface</h2>
+  <p>UNIX and Linux expose a small, composable set of command-line tools. Each tool does one thing. You combine them with <strong>pipes</strong> (<code>|</code>), <strong>redirection</strong> (<code>&gt;</code>, <code>&lt;</code>), and <strong>arguments</strong> to build larger workflows. Knowing a working subset of these tools is non-negotiable for the rest of this course.</p>
+  <p>Minimum command surface for this class: <code>ls</code>, <code>cd</code>, <code>pwd</code>, <code>mkdir</code>, <code>rm</code>, <code>mv</code>, <code>cp</code>, <code>cat</code>, <code>less</code>, <code>grep</code>, <code>find</code>, <code>chmod</code>, <code>chown</code>, <code>ps</code>, <code>kill</code>, <code>man</code>, <code>echo</code>, <code>sort</code>, <code>wc</code>, <code>head</code>, <code>tail</code>, and <code>whoami</code>. You should also be comfortable with <code>vi</code> or <code>nano</code>, environment variables, and writing a basic shell script.</p>
+  <div class="diagram">
+    <div class="label">Composing tools with pipes</div>
+    <pre class="mermaid">
+flowchart LR
+  cat[cat access.log] --> grep["grep ERROR"]
+  grep --> sort["sort"]
+  sort --> uniq["uniq -c"]
+  uniq --> head["head -10"]
+    </pre>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Each command is a single-purpose tool. The pipe is the conveyor belt that hands the output of one tool to the next. You don't build a single giant machine; you chain small ones.
+  </div>
+</section>
+
+<!-- CONCEPT 5 -->
+<section class="concept">
+  <h2><span class="num">5</span>From source code to a running process</h2>
+  <p>The compile-and-run lifecycle has four stops. <strong>Edit</strong> with a text editor (<code>vi</code>, <code>nano</code>, VS Code) to produce a <code>.c</code> source file. <strong>Compile</strong> with <code>gcc</code> to translate it into an executable. <strong>Load</strong> by invoking the executable from the shell, which causes the OS to create a process and load the program into memory. <strong>Execute</strong> as the CPU steps through the instructions until the program exits.</p>
+  <p>Every project in this course follows this loop. Your shell, your scheduler, and your file system manager are all C programs that go through edit → compile → load → execute every time you change them.</p>
+  <div class="diagram">
+    <div class="label">Lifecycle of a C program</div>
+    <pre class="mermaid">
+flowchart LR
+  src[hello.c] --> gcc["gcc hello.c -o hello"]
+  gcc --> bin[hello executable]
+  bin --> shell["./hello"]
+  shell --> proc[Process created]
+  proc --> ld[Code + data loaded into RAM]
+  ld --> run[CPU executes instructions]
+  run --> exit[exit status returned to shell]
+    </pre>
+  </div>
+
+  <!-- Process lifecycle sim -->
+  <div class="sim lifecycle">
+    <h3>Live: ProcessLifecycleSim — step a process through its states</h3>
+    <div class="sim-controls">
+      <button id="lcStep">Advance state</button>
+      <button id="lcReset">Reset</button>
+      <span style="font-size: 12px; color: var(--ink-soft); align-self: center;">Current state: <strong id="lcCurrent">New</strong></span>
+    </div>
+    <svg id="lcSvg" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Source code is the blueprint. <code>gcc</code> is the prototyping shop turning blueprints into a finished machine. Running the program is wheeling that machine onto the floor and letting a station crew operate it.
+  </div>
+</section>
+
+<!-- CHECK FOR UNDERSTANDING -->
+<section class="check">
+  <h2>Check for understanding</h2>
+  <ol>
+    <li>
+      Name the three roles an OS plays, and give one concrete example of each from your own laptop.
+      <details><summary>Show a sample answer</summary>
+        Interface: launching an app from the Dock or by typing in a terminal. Resource manager: when you open Chrome and the OS allocates RAM and CPU time to each tab. Abstraction: opening a "file" without thinking about which disk sectors it lives in.
+      </details>
+    </li>
+    <li>
+      When you type <code>ls -l</code> at the prompt, what does the shell actually call into the OS to do? Name the system calls.
+      <details><summary>Show a sample answer</summary>
+        The shell calls <code>fork()</code> to create a child process, <code>exec()</code> (e.g. <code>execvp</code>) in the child to replace its image with <code>ls</code>, and <code>wait()</code> (or <code>waitpid()</code>) in the parent to pause until <code>ls</code> finishes.
+      </details>
+    </li>
+    <li>
+      What is the difference between a program and a process?
+      <details><summary>Show a sample answer</summary>
+        A program is a static set of instructions on disk. A process is a running instance of a program, with its own memory, registers, file descriptors, and state. You can have many processes for the same program.
+      </details>
+    </li>
+    <li>
+      Why does Project 1 ask you to compile and run a HelloWorld in <em>Linux</em>, not just in your IDE?
+      <details><summary>Show a sample answer</summary>
+        Because every later project requires Linux/UNIX system calls (<code>fork</code>, <code>exec</code>, <code>wait</code>, <code>pipe</code>, etc.) that don't exist or behave differently on Windows. The IDE is editing surface; the program must run in a real UNIX/Linux environment.
+      </details>
+    </li>
+  </ol>
+</section>
+
+<!-- BRIDGE TO ASSIGNMENTS -->
+<section class="bridge">
+  <h2>Bridge to graded work</h2>
+  <div class="item"><strong>Project 1 — Familiarity with UNIX/Linux.</strong> Stand up a Linux/UNIX environment, demonstrate fluency with the command surface, compile a HelloWorld in C, initialize your GitHub repo, push your first commit. Activity 2 of this topic produces most of these deliverables.</div>
+  <div class="item"><strong>Topic 1 Quiz.</strong> Covers Stallings Ch. 1–2. The five concept sections above map directly to quiz questions on hardware components, OS roles, the shell, command surface, and the compile/run lifecycle.</div>
+  <div class="item"><strong>Lab Questions 1–4.</strong> Cache placement, register usage, threads within a process, and logical memory addressing. The hardware/OS-role overview here is the foundation; deeper coverage comes in Topics 2 and 4.</div>
+  <div class="item"><strong>Week participation.</strong> Use the discussion board to debrief the activities — what surprised you about the command line, what tripped you up in setup.</div>
+</section>
+
+<footer class="topic-footer">
+  <div>
+    <a href="../activities/Topic_1_Activities.md">In-class activities for this topic →</a>
+  </div>
+  <div>
+    <a href="../Factory_OS_Master.html">Open the full factory visualization →</a>
+  </div>
+</footer>
+
+</div>
+
+<script>
+  // Mermaid init
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      background: '#fbfaf6',
+      primaryColor: '#fbfaf6',
+      primaryTextColor: '#1b2a4e',
+      primaryBorderColor: '#1b2a4e',
+      lineColor: '#4a587a',
+      fontFamily: 'Inter, -apple-system, sans-serif',
+      fontSize: '13px'
+    },
+    flowchart: { curve: 'basis' }
+  });
+
+  // ----- ShellSim -----
+  (function(){
+    const out = document.getElementById('shellOut');
+    const input = document.getElementById('shellInput');
+    const run = document.getElementById('shellRun');
+    const clear = document.getElementById('shellClear');
+
+    function append(html) {
+      out.innerHTML += '\n' + html;
+      out.scrollTop = out.scrollHeight;
+    }
+    function line(prompt, echo, sysLines, outLines) {
+      let html = `<span class="prompt">${prompt}</span> <span class="echo">${escapeHtml(echo)}</span>`;
+      if (sysLines && sysLines.length) {
+        html += sysLines.map(s => `\n<span class="sys">// ${s}</span>`).join('');
+      }
+      if (outLines && outLines.length) {
+        html += '\n' + outLines.map(o => `<span class="out">${escapeHtml(o)}</span>`).join('\n');
+      }
+      append(html);
+    }
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function execute(cmd) {
+      const trimmed = cmd.trim();
+      if (!trimmed) return;
+      const tokens = trimmed.split(/\s+/);
+      const prog = tokens[0];
+      const sys = [
+        'parsed: tokens = [' + tokens.map(t => `"${t}"`).join(', ') + ']',
+        'fork() -> child PID ' + (1000 + Math.floor(Math.random()*900)),
+        'in child: execvp("' + prog + '", argv)',
+        'in parent: wait() blocking until child exits'
+      ];
+      let outLines = [];
+      switch (prog) {
+        case 'ls':
+          outLines = tokens.includes('-l')
+            ? ['total 8',
+               '-rw-r--r--  1 isac  staff   142 May 30 09:11 README.md',
+               '-rw-r--r--  1 isac  staff  1024 May 30 09:13 hello.c',
+               'drwxr-xr-x  3 isac  staff    96 May 30 09:13 build']
+            : ['README.md  build  hello.c'];
+          break;
+        case 'pwd':
+          outLines = ['/Users/isac/CST-315/Assignment1']; break;
+        case 'whoami':
+          outLines = ['isac']; break;
+        case 'echo':
+          outLines = [tokens.slice(1).join(' ')]; break;
+        case 'help':
+          outLines = ['Try: ls, ls -l, pwd, whoami, echo, cat README.md, grep TODO hello.c'];
+          break;
+        case 'cat':
+          if (tokens[1] === 'README.md') outLines = ['# CST-315', 'Operating Systems Lecture & Lab'];
+          else outLines = ['cat: ' + (tokens[1] || '?') + ': No such file or directory'];
+          break;
+        case 'grep':
+          outLines = ['hello.c:    // TODO: handle multiple commands'];
+          break;
+        default:
+          outLines = [prog + ': command not found (this is a simulation; try ls, pwd, whoami, echo, cat, grep, help)'];
+          sys.push('exec failed -> shell prints error, prompt returns');
+      }
+      sys.push('child exited with status 0, parent resumes');
+      line('lopeShell&gt;', trimmed, sys, outLines);
+    }
+    run.addEventListener('click', () => { execute(input.value); input.value=''; input.focus(); });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') run.click(); });
+    clear.addEventListener('click', () => {
+      out.innerHTML = '<span class="prompt">lopeShell&gt;</span> <span class="sys">Cleared.</span>';
+    });
+  })();
+
+  // ----- ProcessLifecycleSim -----
+  (function(){
+    const RADIUS = 38;
+    const positions = {
+      'New':        {x: 90,  y: 200},
+      'Ready':      {x: 240, y: 200},
+      'Running':    {x: 410, y: 200},
+      'Waiting':    {x: 410, y: 70},
+      'Terminated': {x: 640, y: 200},
+    };
+    const states = Object.keys(positions);
+    // Walk-through sequence for the Advance button
+    const walk = ['New','Ready','Running','Waiting','Ready','Running','Terminated'];
+    // Hand-routed edge paths so labels don't collide
+    const edges = [
+      {d:'M128,200 L202,200',            lx:165, ly:188, label:'admitted'},
+      {d:'M276,187 Q325,140 374,187',     lx:325, ly:128, label:'scheduled'},
+      {d:'M374,213 Q325,260 276,213',     lx:325, ly:272, label:'preempted'},
+      {d:'M410,162 L410,108',             lx:444, ly:140, label:'I/O wait'},
+      {d:'M380,93 Q316,123 270,177',      lx:298, ly:106, label:'I/O done'},
+      {d:'M448,200 L602,200',             lx:525, ly:188, label:'exit'},
+    ];
+    let current = 'New';
+    const svg = d3.select('#lcSvg');
+
+    // arrowhead defined once
+    const defs = svg.append('defs');
+    defs.append('marker')
+      .attr('id','lcArrow').attr('viewBox','0 0 10 10')
+      .attr('refX',9).attr('refY',5).attr('markerWidth',6).attr('markerHeight',6)
+      .attr('orient','auto')
+      .append('path').attr('d','M0,0 L10,5 L0,10 z').attr('fill','#4a587a');
+
+    const content = svg.append('g').attr('class','lc-content');
+
+    function render() {
+      content.selectAll('*').remove();
+      edges.forEach(e => {
+        content.append('path')
+          .attr('class','edge')
+          .attr('d', e.d)
+          .attr('marker-end','url(#lcArrow)');
+        content.append('text')
+          .attr('class','edge-label')
+          .attr('x', e.lx).attr('y', e.ly)
+          .attr('text-anchor','middle')
+          .text(e.label);
+      });
+      states.forEach(s => {
+        const p = positions[s];
+        content.append('circle')
+          .attr('class', 'state-circle' + (current === s ? ' active' : ''))
+          .attr('cx', p.x).attr('cy', p.y).attr('r', RADIUS);
+        content.append('text').attr('class','state-label')
+          .attr('x', p.x).attr('y', p.y)
+          .attr('fill', current === s ? '#fbfaf6' : '#1b2a4e')
+          .text(s);
+      });
+      document.getElementById('lcCurrent').textContent = current;
+    }
+    function advance() {
+      const idx = walk.indexOf(current);
+      current = walk[(idx + 1) % walk.length];
+      render();
+    }
+    document.getElementById('lcStep').addEventListener('click', advance);
+    document.getElementById('lcReset').addEventListener('click', () => { current='New'; render(); });
+    render();
+  })();
+</script>
+
+</body>
+</html>

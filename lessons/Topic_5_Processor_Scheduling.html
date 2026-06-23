@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Topic 5 — Processor Scheduling · CST-315</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root{--bg:#f5f3ee;--ink:#1b2a4e;--ink-soft:#4a587a;--paper:#fbfaf6;--accent:#7a4a9e;--accent-soft:#e2d4ee;--rule:rgba(27,42,78,0.18)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.55}
+  .page{max-width:1080px;margin:0 auto;padding:28px 32px 80px}
+  header.topic-header{border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:28px}
+  .crumb{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .crumb .pill{background:var(--accent);color:var(--paper);padding:2px 8px;border-radius:2px;margin-right:8px;font-weight:600}
+  h1.topic-title{font-size:30px;margin:8px 0 6px;letter-spacing:-.01em;font-weight:700}
+  .topic-meta{font-size:13px;color:var(--ink-soft)} .topic-meta strong{color:var(--ink)}
+  .objectives{margin-top:14px;background:var(--paper);border:1px solid var(--ink);border-left:4px solid var(--accent);padding:14px 18px;border-radius:2px}
+  .objectives h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft)}
+  .objectives ol{margin:0;padding-left:22px;font-size:14px} .objectives li{margin-bottom:4px}
+  .factory-panel{margin-top:28px;background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:18px 20px}
+  .factory-panel h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .factory-panel .ctx-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+  .factory-panel p{margin:0 0 8px;font-size:14px} .factory-panel .meta{font-size:12px;color:var(--ink-soft)}
+  .mini-factory svg{width:100%;height:auto;max-height:220px;display:block}
+  .concept{margin-top:36px;padding-top:24px;border-top:1px solid var(--rule)}
+  .concept .num{display:inline-block;background:var(--ink);color:var(--paper);width:26px;height:26px;border-radius:50%;text-align:center;line-height:26px;font-size:13px;font-weight:700;margin-right:8px}
+  .concept h2{font-size:22px;margin:0 0 10px;font-weight:600} .concept p{font-size:15px;margin:0 0 12px}
+  .diagram{background:var(--paper);border:1px solid var(--rule);border-radius:2px;padding:14px;margin:14px 0}
+  .diagram .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-bottom:8px}
+  .factory-callout{background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 14px;margin:14px 0;font-size:14px}
+  .factory-callout strong{color:var(--accent);font-weight:700}
+  .modern{background:#fbf3ff;border:1px dashed var(--accent);padding:10px 14px;border-radius:3px;margin:14px 0;font-size:14px}
+  .modern strong{color:var(--accent)}
+  .sim{background:var(--paper);border:1px solid var(--ink);border-radius:2px;padding:16px;margin:16px 0}
+  .sim h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .sim .sim-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+  .sim button,.sim select,.sim input[type=number]{background:var(--bg);border:1px solid var(--ink);color:var(--ink);padding:5px 10px;font-size:12px;font-family:inherit;border-radius:2px;cursor:pointer}
+  .sim button:hover{background:var(--ink);color:var(--paper)}
+  .sim .hint{font-size:12px;color:var(--ink-soft)}
+  .schsim svg{max-height:320px;width:100%}
+  .schsim .tasks{font-family:'Menlo','Consolas',monospace;font-size:12px;border:1px solid var(--rule);background:var(--paper);border-collapse:collapse;width:100%;margin-bottom:10px}
+  .schsim .tasks th,.schsim .tasks td{border:1px solid var(--rule);padding:5px 8px;text-align:center}
+  .schsim .tasks th{background:var(--accent-soft);color:var(--ink)}
+  .schsim .stats{display:flex;gap:24px;margin-top:10px;font-size:13px}
+  .schsim .stats div{padding:4px 12px;border:1px solid var(--rule);border-radius:3px}
+  .schsim .stats .num{font-family:'Menlo','Consolas',monospace;font-size:18px;font-weight:700;color:var(--accent);display:block}
+  .schsim .stats .label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+  .check,.bridge{margin-top:36px;padding:18px 20px;background:var(--paper);border:1px solid var(--ink);border-radius:2px}
+  .bridge{border-left:4px solid var(--accent)}
+  .check h2,.bridge h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  .check ol{margin:0;padding-left:22px} .check li{margin-bottom:12px;font-size:14px}
+  .check details{margin-top:6px;font-size:13px;color:var(--ink-soft)}
+  .check summary{cursor:pointer;color:var(--accent);font-weight:600;list-style:none}
+  .check summary::-webkit-details-marker{display:none}
+  .check summary::before{content:"▸ "} .check details[open] summary::before{content:"▾ "}
+  .bridge .item{font-size:14px;margin-bottom:10px} .bridge .item strong{color:var(--ink)}
+  footer.topic-footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--ink);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px}
+  footer a{color:var(--accent);text-decoration:none;font-weight:600} footer a:hover{text-decoration:underline}
+  .mermaid{background:var(--paper);padding:12px;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="topic-header">
+  <div class="crumb"><span class="pill">Topic 5</span> CST-315 · Operating Systems Lecture &amp; Lab</div>
+  <h1 class="topic-title">Processor Scheduling</h1>
+  <div class="topic-meta">Reading: <strong>Stallings, Chapters 9 &amp; 10</strong> · Lab questions 1–4 · Project 5 (Short-Term Process Scheduler) · Topics 5–6 Quiz</div>
+  <div class="objectives">
+    <h2>Topic objectives (from syllabus)</h2>
+    <ol>
+      <li>Implement process scheduling algorithms.</li>
+      <li>Examine the effect of different parameters.</li>
+      <li>Develop a custom Unix/Linux scheduler.</li>
+      <li>Modify a parameter for the scheduler by adding a system call.</li>
+    </ol>
+  </div>
+</header>
+
+<section class="factory-panel">
+  <h2>Where this topic sits in the factory</h2>
+  <div class="ctx-grid">
+    <div>
+      <p>Topic 5 is the <strong>floor supervisor's job description</strong>. Many work orders are queued and only a few stations are free. The supervisor decides whose order goes on which station, how long they stay, and what to do when something urgent comes in. That is scheduling.</p>
+      <p>The supervisor uses a policy. Different policies produce different fairness, throughput, and responsiveness. Project 5 has you build your own supervisor — design the policy, defend the choice, expose hooks so an outside command (your shell) can tune it.</p>
+      <p class="meta">Open: <a href="../Factory_OS_Master.html?highlight=cpu" style="color:var(--accent)">Supervisor on the floor</a></p>
+    </div>
+    <div class="mini-factory">
+      <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="308" height="20" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="34" width="80" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="92" y="34" width="140" height="76" rx="2" fill="#fbfaf6" stroke="#7a4a9e" stroke-width="2.5"/>
+        <text x="100" y="48" font-size="9" font-weight="700" fill="#7a4a9e">FLOOR — SCHEDULING</text>
+        <rect x="100" y="60" width="40" height="36" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="120" y="80" font-size="8" text-anchor="middle" fill="#1b2a4e">S1</text>
+        <rect x="148" y="60" width="40" height="36" fill="#fbfaf6" stroke="#1b2a4e"/>
+        <text x="168" y="80" font-size="8" text-anchor="middle" fill="#1b2a4e">S2</text>
+        <circle cx="210" cy="78" r="10" fill="#7a4a9e"/>
+        <text x="210" y="81" font-size="8" text-anchor="middle" fill="#fbfaf6" font-weight="700">SUP</text>
+        <rect x="238" y="34" width="76" height="76" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="116" width="80" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="92" y="116" width="140" height="50" rx="2" fill="#fbfaf6" stroke="#7a4a9e" stroke-width="2"/>
+        <text x="100" y="130" font-size="9" font-weight="700" fill="#7a4a9e">READY QUEUE</text>
+        <circle cx="120" cy="148" r="5" fill="#7a4a9e"/>
+        <circle cx="135" cy="148" r="5" fill="#7a4a9e"/>
+        <circle cx="150" cy="148" r="5" fill="#7a4a9e"/>
+        <rect x="238" y="116" width="76" height="50" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+        <rect x="6" y="172" width="308" height="22" rx="2" fill="#fbfaf6" stroke="#1b2a4e" opacity="0.35"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">1</span>What you're optimizing for</h2>
+  <p>Schedulers are evaluated against a small set of metrics, and any choice is a trade-off. <strong>CPU utilization</strong>: keep cores busy. <strong>Throughput</strong>: processes completed per unit time. <strong>Turnaround time</strong>: completion time minus arrival time. <strong>Waiting time</strong>: time in the ready queue. <strong>Response time</strong>: time from arrival to first running. <strong>Fairness</strong>: comparable processes get comparable service.</p>
+  <p>Interactive workloads care most about response time. Batch workloads care about throughput and turnaround. A single scheduler cannot perfectly serve both; modern systems either pick a sweet spot or maintain multiple queues with different policies.</p>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Some customers wait at the counter (response time matters). Some submit big overnight jobs (throughput matters). The supervisor balances them. Pick the wrong policy and you'll either have idle stations or a long line of irritated customers.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">2</span>The classical algorithms</h2>
+  <p><strong>First-Come, First-Served (FCFS)</strong>: ready queue is FIFO. Simple, fair-ish, but a long process at the front penalizes everyone behind it (convoy effect). <strong>Shortest Job First (SJF)</strong>: pick the process with the shortest expected burst. Optimal for average wait time — if you know the burst length, which you usually don't. <strong>Shortest Remaining Time (SRT)</strong>: preemptive SJF; new arrivals can kick out longer-remaining current processes.</p>
+  <p><strong>Round Robin (RR)</strong>: each process gets a time slice (quantum); when the quantum expires, it goes to the back of the queue. Excellent response time; turnaround scales with quantum choice. Too short: context-switch overhead dominates. Too long: degenerates to FCFS. <strong>Priority scheduling</strong>: each process has a priority; highest priority runs first. Risk: starvation of low-priority processes. Mitigation: aging — increase priority the longer a process waits.</p>
+  <p><strong>Multilevel Feedback Queue (MLFQ)</strong>: multiple ready queues at different priorities, processes demoted if they use their full quantum (CPU-bound) and promoted if they release early (I/O-bound). Approximates SJF without knowing burst lengths. Variants run the world's interactive systems.</p>
+
+  <div class="sim schsim">
+    <h3>Live: SchedulerSim — schedule the same workload under different policies</h3>
+    <div class="sim-controls">
+      <label class="hint">Algorithm:
+        <select id="schAlgo">
+          <option value="FCFS">FCFS</option>
+          <option value="SJF">SJF (non-preemptive)</option>
+          <option value="SRT">SRT (preemptive SJF)</option>
+          <option value="RR" selected>Round Robin</option>
+          <option value="PRIO">Priority (non-preemptive)</option>
+        </select>
+      </label>
+      <label class="hint">Quantum: <input type="number" id="schQ" value="2" min="1" max="10" style="width:60px"></label>
+      <button id="schRun">Run</button>
+      <button id="schReset">Reset workload</button>
+    </div>
+    <table class="tasks">
+      <thead><tr><th>PID</th><th>Arrival</th><th>Burst</th><th>Priority</th></tr></thead>
+      <tbody id="schTasks"></tbody>
+    </table>
+    <svg id="schSvg" viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="stats">
+      <div><span class="label">Avg waiting</span><span class="num" id="schWait">—</span></div>
+      <div><span class="label">Avg turnaround</span><span class="num" id="schTurn">—</span></div>
+      <div><span class="label">Throughput</span><span class="num" id="schThru">—</span></div>
+      <div><span class="label">Context switches</span><span class="num" id="schSw">—</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">3</span>Modern Linux scheduling — CFS and beyond</h2>
+  <p>Linux uses the <strong>Completely Fair Scheduler (CFS)</strong> for most processes. CFS abandons fixed time slices and runs the process with the smallest <em>virtual runtime</em> (vruntime) so far. Each process's vruntime increases at a rate inversely proportional to its weight (priority/nice value). The result: all processes make smooth progress, weighted by priority, without explicit queues or quantums.</p>
+  <p>Real-time processes use separate classes (SCHED_FIFO, SCHED_RR) that bypass CFS. As of 2023, Linux is also shipping <strong>EEVDF</strong> (Earliest Eligible Virtual Deadline First) as a successor scheduler that combines fairness with explicit latency guarantees. Project 5 doesn't require you to reimplement CFS, but you should be able to discuss why a real scheduler does not look like textbook RR.</p>
+  <div class="modern">
+    <strong>Modern callout.</strong> When you read about Kubernetes "CPU shares" or container "CPU weights" — that's CFS's weight parameter, exposed through cgroups. The same scheduler that picks which terminal gets your keystrokes also distributes cloud-scale compute.
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> CFS is the supervisor with a stopwatch. They don't say "you get 10 minutes then I rotate." They say "you've had the least running-time so far; you're next." High-weight processes accrue runtime more slowly, so they get more wall clock.
+  </div>
+</section>
+
+<section class="concept">
+  <h2><span class="num">4</span>Implementation considerations for your scheduler</h2>
+  <p>Project 5's spec lists 11 questions you must answer in design and code. The big ones: <em>How is the queue represented?</em> (linked list, array, heap, multilevel structure?). <em>Is it preemptive?</em> (Round Robin yes; FCFS no). <em>How do you handle I/O waits?</em> (move to wait queue, mark blocked, requeue on completion). <em>How do you avoid starvation?</em> (aging). <em>How do you minimize overhead?</em> (avoid copying clipboards; keep queue operations O(1) or O(log n)).</p>
+  <p>The other dimension is the user interface: implement `procs` to list processes and states, with `-a` for detail and `-si` for sorting. Implement a command to modify priority — and expose that command as a system call so external tools can change scheduling parameters at runtime. That's objective 4 ("modify a parameter via a system call").</p>
+  <div class="diagram">
+    <div class="label">State transitions your scheduler must implement</div>
+    <pre class="mermaid">
+flowchart LR
+  R[Ready queue] -- scheduler picks --> RU[Running on CPU]
+  RU -- quantum expires --> R
+  RU -- I/O request --> W[Wait queue]
+  W -- I/O complete --> R
+  RU -- finishes --> T[Terminated]
+  R -- aged too long --> R2[Boost priority]
+  R2 --> R
+    </pre>
+  </div>
+  <div class="factory-callout">
+    <strong>Factory translation.</strong> Your supervisor must handle every transition explicitly: starting a job, parking a job when it waits for a runner, picking the next one when a station opens, and noticing when someone has been sitting in the queue too long.
+  </div>
+</section>
+
+<section class="check">
+  <h2>Check for understanding</h2>
+  <ol>
+    <li>
+      Compute average waiting time for FCFS on the workload {P1: arrival 0 burst 7, P2: arrival 2 burst 4, P3: arrival 4 burst 1}.
+      <details><summary>Show a sample answer</summary>
+        P1 starts at 0, finishes at 7 (wait 0). P2 arrives at 2, runs at 7, finishes at 11 (wait 5). P3 arrives at 4, runs at 11, finishes at 12 (wait 7). Avg = (0+5+7)/3 = 4. Now do the same workload under SJF and see the convoy effect disappear.
+      </details>
+    </li>
+    <li>
+      If your RR quantum is huge (say larger than every burst), what does RR degrade to?
+      <details><summary>Show a sample answer</summary>
+        FCFS. No process gets preempted, so the queue is processed in arrival order.
+      </details>
+    </li>
+    <li>
+      Why is starvation a risk in priority scheduling and not in RR?
+      <details><summary>Show a sample answer</summary>
+        Priority always picks the highest-priority ready process; a low-priority one can wait indefinitely if higher-priority work keeps arriving. RR rotates through all processes in the queue regardless of priority, so every process eventually gets a turn.
+      </details>
+    </li>
+    <li>
+      Your scheduler receives 1000 ready processes. The queue is a sorted linked list. Each scheduling decision is O(n) just to find the head. Why is that a problem and what's the standard fix?
+      <details><summary>Show a sample answer</summary>
+        At 1000 processes, that's a long walk per decision, and you make a decision on every preemption. Standard fixes: a min-heap (O(log n) insert and find-min), or maintain a per-priority array of FIFOs (O(1) find-min), or — like CFS — a red-black tree keyed on vruntime (O(log n) but better constants and self-balancing).
+      </details>
+    </li>
+  </ol>
+</section>
+
+<section class="bridge">
+  <h2>Bridge to graded work</h2>
+  <div class="item"><strong>Project 5 — Short-Term Process Scheduler.</strong> Implement a scheduler in C with your choice of algorithm. Support interactive and batch modes. Implement <code>procs</code>, <code>procs -a</code>, <code>procs -a -si</code>, and a priority-modification command. Activity 2 builds the core decision logic you'll integrate.</div>
+  <div class="item"><strong>Topics 5–6 Quiz.</strong> Stallings Ch. 9–12: scheduling metrics, algorithms, queue management, plus the file-system topics from Topic 6.</div>
+  <div class="item"><strong>Project 4 spillover.</strong> Your VMM faults block processes; the scheduler decides who runs next. Confirm that your wait-queue transitions are integrated.</div>
+</section>
+
+<footer class="topic-footer">
+  <div><a href="../activities/Topic_5_Activities.md">In-class activities for this topic →</a></div>
+  <div><a href="../Factory_OS_Master.html">Open the full factory visualization →</a></div>
+</footer>
+
+</div>
+
+<script>
+  mermaid.initialize({startOnLoad:true,theme:'base',themeVariables:{background:'#fbfaf6',primaryColor:'#fbfaf6',primaryTextColor:'#1b2a4e',primaryBorderColor:'#1b2a4e',lineColor:'#4a587a',fontFamily:'Inter, -apple-system, sans-serif',fontSize:'13px'},flowchart:{curve:'basis'}});
+
+  // ----- SchedulerSim -----
+  (function(){
+    const workload = [
+      {pid:'P1', arrival:0, burst:7, priority:3},
+      {pid:'P2', arrival:2, burst:4, priority:1},
+      {pid:'P3', arrival:4, burst:1, priority:4},
+      {pid:'P4', arrival:5, burst:4, priority:2},
+    ];
+    const colors={P1:'#7a4a9e',P2:'#3b5fa8',P3:'#2e7d6b',P4:'#c9742e'};
+
+    function renderTable(){
+      const tb=document.getElementById('schTasks'); tb.innerHTML='';
+      workload.forEach(t=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${t.pid}</td><td>${t.arrival}</td><td>${t.burst}</td><td>${t.priority}</td>`;
+        tb.appendChild(tr);
+      });
+    }
+    function fcfs(){
+      const arr=[...workload].sort((a,b)=>a.arrival-b.arrival);
+      let t=0; const sched=[];
+      arr.forEach(p=>{
+        if(t<p.arrival) t=p.arrival;
+        sched.push({pid:p.pid,start:t,end:t+p.burst}); t+=p.burst;
+      });
+      return sched;
+    }
+    function sjf(){
+      const arr=workload.map(p=>({...p,remaining:p.burst,done:false}));
+      let t=0; const sched=[];
+      while(arr.some(p=>!p.done)){
+        const ready=arr.filter(p=>!p.done && p.arrival<=t);
+        if(ready.length===0){ t++; continue; }
+        ready.sort((a,b)=>a.burst-b.burst);
+        const p=ready[0];
+        sched.push({pid:p.pid,start:t,end:t+p.burst});
+        t+=p.burst; p.done=true;
+      }
+      return sched;
+    }
+    function srt(){
+      const arr=workload.map(p=>({...p,remaining:p.burst,done:false}));
+      let t=0; const sched=[]; let cur=null;
+      while(arr.some(p=>!p.done)){
+        const ready=arr.filter(p=>!p.done && p.arrival<=t);
+        if(ready.length===0){ t++; continue; }
+        ready.sort((a,b)=>a.remaining-b.remaining);
+        const p=ready[0];
+        if(!cur || cur.pid!==p.pid){
+          if(cur) sched[sched.length-1].end=t;
+          sched.push({pid:p.pid,start:t,end:t+1});
+          cur=p;
+        } else {
+          sched[sched.length-1].end=t+1;
+        }
+        p.remaining--; if(p.remaining===0){p.done=true; cur=null;}
+        t++;
+      }
+      return sched;
+    }
+    function rr(q){
+      const arr=workload.map(p=>({...p,remaining:p.burst,done:false}));
+      let t=0; const sched=[]; const queue=[];
+      let pending=arr.length;
+      // arrival-driven
+      function admit(){ arr.filter(p=>!p.done && p.arrival<=t && !queue.includes(p) && !p._running).forEach(p=>queue.push(p)); }
+      admit();
+      while(pending>0){
+        if(queue.length===0){ t++; admit(); continue; }
+        const p=queue.shift();
+        const run=Math.min(q, p.remaining);
+        sched.push({pid:p.pid,start:t,end:t+run});
+        t+=run; p.remaining-=run; admit();
+        if(p.remaining>0) queue.push(p); else { p.done=true; pending--; }
+      }
+      return sched;
+    }
+    function prio(){
+      const arr=workload.map(p=>({...p,done:false}));
+      let t=0; const sched=[];
+      while(arr.some(p=>!p.done)){
+        const ready=arr.filter(p=>!p.done && p.arrival<=t);
+        if(ready.length===0){ t++; continue; }
+        ready.sort((a,b)=>a.priority-b.priority); // lower number = higher priority
+        const p=ready[0];
+        sched.push({pid:p.pid,start:t,end:t+p.burst});
+        t+=p.burst; p.done=true;
+      }
+      return sched;
+    }
+    function compute(){
+      const algo=document.getElementById('schAlgo').value;
+      const q=parseInt(document.getElementById('schQ').value)||2;
+      let sched;
+      if(algo==='FCFS') sched=fcfs();
+      else if(algo==='SJF') sched=sjf();
+      else if(algo==='SRT') sched=srt();
+      else if(algo==='RR') sched=rr(q);
+      else sched=prio();
+      // metrics
+      const completion={}, runtime={};
+      sched.forEach(s=>{
+        completion[s.pid]=s.end;
+        runtime[s.pid]=(runtime[s.pid]||0)+(s.end-s.start);
+      });
+      let waits=[], turns=[];
+      workload.forEach(p=>{
+        const tn=completion[p.pid]-p.arrival;
+        const w=tn-p.burst;
+        turns.push(tn); waits.push(w);
+      });
+      const switches=sched.length-1;
+      const total=sched.length>0?sched[sched.length-1].end:0;
+      const thru=workload.length/(total||1);
+      document.getElementById('schWait').textContent=(waits.reduce((a,b)=>a+b,0)/waits.length).toFixed(1);
+      document.getElementById('schTurn').textContent=(turns.reduce((a,b)=>a+b,0)/turns.length).toFixed(1);
+      document.getElementById('schThru').textContent=thru.toFixed(2);
+      document.getElementById('schSw').textContent=switches;
+      drawGantt(sched, total);
+    }
+    function drawGantt(sched, total){
+      const svg=d3.select('#schSvg'); svg.selectAll('*').remove();
+      const W=720, H=200, padL=40, padR=20, padT=30, padB=40;
+      const usable=W-padL-padR;
+      const scale=total>0?usable/total:0;
+      // axis
+      svg.append('line').attr('x1',padL).attr('y1',H-padB).attr('x2',W-padR).attr('y2',H-padB).attr('stroke','#1b2a4e');
+      for(let i=0;i<=total;i++){
+        svg.append('line').attr('x1',padL+i*scale).attr('y1',H-padB).attr('x2',padL+i*scale).attr('y2',H-padB+5).attr('stroke','#1b2a4e');
+        if(i%2===0||total<15)
+        svg.append('text').attr('x',padL+i*scale).attr('y',H-padB+18).attr('text-anchor','middle').attr('font-size',10).attr('fill','#4a587a').text(i);
+      }
+      svg.append('text').attr('x',padL).attr('y',padT-8).attr('font-size',11).attr('font-weight',600).attr('fill','#1b2a4e').text('Gantt chart');
+      sched.forEach(s=>{
+        svg.append('rect').attr('x',padL+s.start*scale).attr('y',padT).attr('width',(s.end-s.start)*scale).attr('height',H-padB-padT).attr('fill',colors[s.pid]).attr('stroke','#1b2a4e').attr('stroke-width',1);
+        if((s.end-s.start)*scale > 22){
+          svg.append('text').attr('x',padL+(s.start+(s.end-s.start)/2)*scale).attr('y',padT+(H-padB-padT)/2).attr('text-anchor','middle').attr('dominant-baseline','central').attr('font-size',13).attr('font-weight',700).attr('fill','#fbfaf6').text(s.pid);
+        }
+      });
+    }
+    function reset(){
+      document.getElementById('schWait').textContent='—';
+      document.getElementById('schTurn').textContent='—';
+      document.getElementById('schThru').textContent='—';
+      document.getElementById('schSw').textContent='—';
+      d3.select('#schSvg').selectAll('*').remove();
+    }
+    document.getElementById('schRun').addEventListener('click',compute);
+    document.getElementById('schReset').addEventListener('click',reset);
+    document.getElementById('schAlgo').addEventListener('change',compute);
+    document.getElementById('schQ').addEventListener('change',compute);
+    renderTable(); compute();
+  })();
+</script>
+</body>
+</html>
