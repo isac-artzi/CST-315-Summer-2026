@@ -1,2 +1,7 @@
 # macOS
 .DS_Store
+
+# Binary/non-source course files in repo root
+/*.html
+/*.docx
+/*.pdf
