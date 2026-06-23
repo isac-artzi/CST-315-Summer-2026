@@ -5,3 +5,6 @@
 /*.html
 /*.docx
 /*.pdf
+
+# Internal PRD docs
+/PRD_*.md
